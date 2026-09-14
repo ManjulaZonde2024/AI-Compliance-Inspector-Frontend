@@ -1,0 +1,55 @@
+import { fallbackScanContext, scanStageFixtures } from '../mocks/scan'
+import { inspectionEvidenceMock, inspectionResultMock } from '../mocks/result'
+import { inspectionRepository } from './inspectionRepository'
+import type { ScanInspectionContext, ScanSnapshot } from '../types/scan'
+
+export type ImageCheckResult = { accepted: boolean; reason?: 'blurry' | 'duplicate' | 'irrelevant'; imageCount: number }
+
+export const imageCheckerService = {
+  checkImages(inspectionId: string): Promise<ImageCheckResult> {
+    const record = inspectionRepository.get(inspectionId)
+    const rejectedImage = record?.images.find((image) => /blurry|duplicate|irrelevant/i.test(image.name))
+    const reason = rejectedImage?.name.match(/blurry|duplicate|irrelevant/i)?.[0].toLowerCase() as ImageCheckResult['reason'] | undefined
+    return Promise.resolve({ accepted: Boolean(record?.images.length) && !rejectedImage, reason, imageCount: record?.images.length ?? 0 })
+  },
+}
+
+function createSnapshot(inspectionId: string, context: ScanInspectionContext, attempt: number): ScanSnapshot {
+  return {
+    inspectionId,
+    status: 'processing',
+    attempt,
+    context,
+    stages: scanStageFixtures.map((stage, index) => ({ ...stage, state: index === 0 ? 'active' : 'pending' })),
+  }
+}
+
+/** Presentation-only scan state boundary. A future API can replace these methods. */
+export const scanService = {
+  getInitialScan(inspectionId: string, context?: ScanInspectionContext): Promise<ScanSnapshot> {
+    const record = inspectionRepository.get(inspectionId)
+    if (!record) return Promise.reject(new Error('Inspection not found'))
+    const recordContext: ScanInspectionContext = { productName: record.productName, category: record.category, images: record.images.map((image) => ({ previewUrl: image.previewUrl, role: image.role })) }
+    inspectionRepository.setProcessingStatus(inspectionId, 'submitted')
+    return imageCheckerService.checkImages(inspectionId).then((check) => { if (check.accepted) return createSnapshot(inspectionId, recordContext ?? context ?? fallbackScanContext, 1); const errorMessage = `The submitted images were rejected by the image-check adapter as ${check.reason ?? 'not suitable'}. Replace them and scan again.`; inspectionRepository.setProcessingStatus(inspectionId, 'failed', errorMessage); const rejectedSnapshot = createSnapshot(inspectionId, recordContext, 1); return { ...rejectedSnapshot, status: 'failed', errorMessage, stages: rejectedSnapshot.stages.map((stage, index) => ({ ...stage, state: index === 0 ? 'failed' : stage.state })) } })
+  },
+  advanceScan(snapshot: ScanSnapshot): Promise<ScanSnapshot> {
+    const activeIndex = snapshot.stages.findIndex((stage) => stage.state === 'active')
+    if (activeIndex === -1 || snapshot.status !== 'processing') return Promise.resolve(snapshot)
+    const shouldFail = snapshot.inspectionId.endsWith('-FAIL') && snapshot.attempt === 1 && activeIndex === 2
+    if (shouldFail) {
+      return Promise.resolve({ ...snapshot, status: 'failed', errorMessage: 'The submitted images could not be processed as a complete inspection. Please try again.', stages: snapshot.stages.map((stage, index) => ({ ...stage, state: index === activeIndex ? 'failed' : stage.state })) })
+    }
+    const completed = activeIndex === snapshot.stages.length - 1
+    const stages: ScanSnapshot['stages'] = snapshot.stages.map((stage, index) => ({ ...stage, state: index < activeIndex + 1 ? 'completed' : index === activeIndex + 1 ? 'active' : 'pending' }))
+    if (completed) {
+      const record = inspectionRepository.get(snapshot.inspectionId)
+      if (record) inspectionRepository.update(snapshot.inspectionId, { processingStatus: 'completed', inspectedAt: new Date().toISOString(), complianceStatus: inspectionResultMock.status, complianceScore: inspectionResultMock.score, summary: inspectionResultMock.summary, findings: inspectionResultMock.findings, evidence: inspectionEvidenceMock, reportStatus: 'Generated', reportVersion: 'Draft 1.0' })
+    } else inspectionRepository.setProcessingStatus(snapshot.inspectionId, 'processing')
+    return Promise.resolve({ ...snapshot, status: completed ? 'completed' : 'processing', stages })
+  },
+  retryScan(snapshot: ScanSnapshot): Promise<ScanSnapshot> {
+    inspectionRepository.setProcessingStatus(snapshot.inspectionId, 'processing')
+    return Promise.resolve(createSnapshot(snapshot.inspectionId, snapshot.context, snapshot.attempt + 1))
+  },
+}

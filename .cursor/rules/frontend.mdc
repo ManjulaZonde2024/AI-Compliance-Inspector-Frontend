@@ -1,0 +1,29 @@
+---
+description: Frontend-only boundaries, architecture, mock-first, and design-system rules for AI Compliance Inspector.
+alwaysApply: true
+---
+
+# AI Compliance Inspector — frontend
+
+This repo is **frontend only**. Do not implement OCR, image processing, translation, extraction, JSON generation, compliance/rule engines, sanction decisions, evidence generation, RAG, official-source fetching, MongoDB, auth/JWT/session internals, or backend report generation.
+
+## Architecture
+
+- `pages/` and `components/` render UI from props/state. They do not own business rules or HTTP.
+- `services/` is the only place for API clients. UI talks to services, never `fetch` in components.
+- `types/` holds frontend/API models. `hooks/` holds reusable client behavior. `mocks/` holds fixtures.
+- Replace mocks with real APIs later without rewriting screens. Do not add fake network calls until that batch.
+
+## Design
+
+Use semantic tokens (`bg`, `surface`, `ink`, `muted`, `border`, `brand`, `success`, `warning`, `danger`, `info`). Navy/slate foundation, blue accent, calm enterprise workstation. No cyberpunk, heavy gradients, glassmorphism, or extra animation.
+
+Reuse `Button`, `Input`, `Card`, `Badge`, `LoadingState`, and layout (`AppShell`, `Sidebar`, `Navbar`, `PageHeader`). Do not duplicate primitives.
+
+## Scope
+
+Build only the requested batch. Route placeholders stay placeholders until their feature batch. Do not install dependencies unless clearly needed now.
+
+## Efficiency
+
+Do not regenerate scaffolding, re-explain architecture, or expand scope. Prefer small diffs. After UI work: typecheck/build and fix issues you introduced.
