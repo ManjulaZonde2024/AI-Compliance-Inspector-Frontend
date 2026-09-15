@@ -1,8 +1,10 @@
 import { inspectionEvidenceMock, inspectionResultMock } from '../mocks/result'
 import { inspectionHistoryMock } from '../mocks/history'
-import type { CreateInspectionInput, InspectionRecord, InspectionImage, InspectionProcessingStatus, ProductCategory } from '../types'
+import type { CreateInspectionInput, InspectionRecord, InspectionImage, InspectionProcessingStatus, InspectionResultData, ProductCategory } from '../types'
 
-const storageKey = 'ai-compliance-inspector.inspections.v1'
+// v2: re-seed dev data so inspections scanned before the evidence-source fix
+// (which stored another product's mock evidence) are not served stale.
+const storageKey = 'ai-compliance-inspector.inspections.v2'
 
 function seedRecords(): InspectionRecord[] {
   const findingRecord = (inspectionId: string, productName: string, category: ProductCategory | '', inspectedAt: string, status: InspectionRecord['complianceStatus'], findingCount: number, severity: InspectionRecord['findings'][number]['severity'] | undefined): InspectionRecord => ({
@@ -37,6 +39,21 @@ function fileToDataUrl(file: File): Promise<string> {
 export const inspectionRepository = {
   list(): InspectionRecord[] { return readRecords() },
   get(inspectionId: string): InspectionRecord | undefined { return readRecords().find((record) => record.inspectionId === inspectionId) },
+  getResultData(inspectionId: string): InspectionResultData | undefined {
+    const record = this.get(inspectionId)
+    if (!record || !record.complianceStatus) return undefined
+    return {
+      inspectionId: record.inspectionId,
+      productName: record.productName,
+      category: record.category || undefined,
+      inspectedAt: record.inspectedAt,
+      status: record.complianceStatus,
+      score: record.complianceScore,
+      summary: record.summary ?? 'No summary was returned for this inspection.',
+      findings: record.findings,
+      evidence: record.evidence,
+    }
+  },
   save(record: InspectionRecord): InspectionRecord { const records = readRecords().filter((item) => item.inspectionId !== record.inspectionId); writeRecords([record, ...records]); return record },
   update(inspectionId: string, patch: Partial<InspectionRecord>): InspectionRecord | undefined { const record = this.get(inspectionId); if (!record) return undefined; return this.save({ ...record, ...patch }) },
   async create(input: CreateInspectionInput, inspectionId: string): Promise<InspectionRecord> {

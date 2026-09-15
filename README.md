@@ -394,7 +394,7 @@ The primary compliance outcomes presented by the frontend are:
 
 The frontend should not introduce a separate **"Needs Review"** compliance status unless the product requirements are explicitly changed.
 
-Individual evidence or findings may still contain review-related actions where appropriate.
+If future backend data indicates uncertainty, the frontend may surface a secondary verification state without replacing the final compliance outcome.
 
 ---
 

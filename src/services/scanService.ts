@@ -1,5 +1,5 @@
 import { fallbackScanContext, scanStageFixtures } from '../mocks/scan'
-import { inspectionEvidenceMock, inspectionResultMock } from '../mocks/result'
+import { buildInspectionResultData } from '../mocks/result'
 import { inspectionRepository } from './inspectionRepository'
 import type { ScanInspectionContext, ScanSnapshot } from '../types/scan'
 
@@ -44,7 +44,13 @@ export const scanService = {
     const stages: ScanSnapshot['stages'] = snapshot.stages.map((stage, index) => ({ ...stage, state: index < activeIndex + 1 ? 'completed' : index === activeIndex + 1 ? 'active' : 'pending' }))
     if (completed) {
       const record = inspectionRepository.get(snapshot.inspectionId)
-      if (record) inspectionRepository.update(snapshot.inspectionId, { processingStatus: 'completed', inspectedAt: new Date().toISOString(), complianceStatus: inspectionResultMock.status, complianceScore: inspectionResultMock.score, summary: inspectionResultMock.summary, findings: inspectionResultMock.findings, evidence: inspectionEvidenceMock, reportStatus: 'Generated', reportVersion: 'Draft 1.0' })
+      if (record) {
+        // Bind the mock/dev result payload to THIS inspection's own product,
+        // category, and submitted images so Result/Evidence/Report stay
+        // internally consistent for the same inspection ID.
+        const resultData = buildInspectionResultData(record)
+        inspectionRepository.update(snapshot.inspectionId, { processingStatus: 'completed', inspectedAt: new Date().toISOString(), complianceStatus: resultData.status, complianceScore: resultData.score, summary: resultData.summary, findings: resultData.findings, evidence: resultData.evidence, reportStatus: 'Generated', reportVersion: 'Draft 1.0' })
+      }
     } else inspectionRepository.setProcessingStatus(snapshot.inspectionId, 'processing')
     return Promise.resolve({ ...snapshot, status: completed ? 'completed' : 'processing', stages })
   },

@@ -91,12 +91,18 @@ export function SettingsPage() {
     )
   }
 
+  const kbSynced = settings.knowledgeBaseStatus === 'synced'
+
   return (
     <div>
       <PageHeader
         title="Settings"
         description="Manage Legal Metrology knowledge-base synchronization and update schedules."
       />
+
+      <p className="mb-5 max-w-3xl text-sm leading-6 text-muted">
+        Official Legal Metrology references are synchronized by the connected service, and inspections evaluate against the resulting knowledge base.
+      </p>
 
       {message ? (
         <div
@@ -116,16 +122,28 @@ export function SettingsPage() {
           title="Knowledge base status"
           description="Frontend representation of the returned RAG knowledge source state."
         >
-          <div className="mt-5 flex items-center justify-between gap-4 rounded-md border border-success/25 bg-success/5 p-4">
-            <div>
-              <p className="font-medium text-ink">Official sources synchronized</p>
-              <p className="mt-1 text-sm text-muted">
-                The knowledge base is available to the inspection workflow.
-              </p>
+          <div
+            className={`relative mt-5 overflow-hidden rounded-md border p-4 ${kbSynced ? 'border-success/25 bg-success/5' : 'border-warning/25 bg-warning/5'}`}
+          >
+            <span
+              className={`absolute inset-y-0 left-0 w-1 ${kbSynced ? 'bg-success' : 'bg-warning'}`}
+              aria-hidden
+            />
+            <div className="flex items-start justify-between gap-4 pl-2">
+              <div>
+                <p className="font-medium text-ink">
+                  {kbSynced ? 'Official sources synchronized' : 'Attention required'}
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  {kbSynced
+                    ? 'The knowledge base is available to the inspection workflow.'
+                    : 'The connected service reports the knowledge base state needs attention.'}
+                </p>
+              </div>
+              <Badge tone={kbSynced ? 'success' : 'warning'}>
+                {kbSynced ? 'Synced' : 'Attention'}
+              </Badge>
             </div>
-            <Badge tone="success">
-              {settings.knowledgeBaseStatus === 'synced' ? 'Synced' : 'Attention'}
-            </Badge>
           </div>
 
           <dl className="mt-4 divide-y divide-border text-sm">
@@ -152,7 +170,12 @@ export function SettingsPage() {
         >
           <div className="mt-5 flex items-center justify-between rounded-md border border-border bg-bg p-4">
             <div>
-              <p className="font-medium text-ink">Enable scheduler</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium text-ink">Enable scheduler</p>
+                <Badge tone={settings.enabled ? 'success' : 'default'}>
+                  {settings.enabled ? 'On' : 'Off'}
+                </Badge>
+              </div>
               <p className="mt-1 text-sm text-muted">
                 Allow scheduled source synchronization requests.
               </p>
@@ -162,6 +185,7 @@ export function SettingsPage() {
               role="switch"
               aria-checked={settings.enabled}
               aria-label="Enable scheduler"
+              aria-describedby="scheduler-state-note"
               onClick={() => {
                 setSettings({ ...settings, enabled: !settings.enabled })
                 setMessage(null)
@@ -177,6 +201,19 @@ export function SettingsPage() {
               />
             </button>
           </div>
+
+          <p
+            id="scheduler-state-note"
+            className={`mt-3 rounded-md border px-3 py-2.5 text-sm ${
+              settings.enabled
+                ? 'border-brand/25 bg-brand-light/60 text-ink'
+                : 'border-border bg-bg text-muted'
+            }`}
+          >
+            {settings.enabled
+              ? `Scheduling is on. The connected service is configured to refresh ${frequencyLabels[settings.frequency].toLowerCase()}.`
+              : 'Scheduling is off. The knowledge base will not refresh automatically until the scheduler is enabled and changes are saved.'}
+          </p>
 
           <label className="mt-5 flex flex-col gap-1.5 text-sm font-medium text-ink">
             Frequency
@@ -208,9 +245,18 @@ export function SettingsPage() {
             </div>
             <div className="rounded-md border border-border p-3">
               <p className="text-xs text-muted">Next scheduled run</p>
-              <p className="mt-1 text-sm font-medium text-ink">
-                {formatDate(settings.nextRun)}
-              </p>
+              {settings.enabled ? (
+                <p className="mt-1 text-sm font-medium text-ink">
+                  {formatDate(settings.nextRun)}
+                </p>
+              ) : (
+                <>
+                  <p className="mt-1 text-sm font-medium text-muted">Not scheduled</p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    Scheduling is off — no run is planned.
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
@@ -241,7 +287,7 @@ export function SettingsPage() {
           </div>
           <div className="rounded-md border border-border bg-bg p-4">
             <p className="font-medium text-ink">Synchronization managed by</p>
-            <p className="mt-1 text-sm text-muted">Connected service</p>
+            <p className="mt-1 text-sm font-medium text-ink">Connected service</p>
           </div>
         </div>
       </Card>

@@ -114,6 +114,18 @@ export type InspectionEvidence = {
   boundingBox?: EvidenceBoundingBox
 }
 
+/**
+ * Canonical per-inspection result payload returned by the result boundary.
+ * One inspection has exactly one `InspectionResultData`: the compliance
+ * decision, its findings, and the supporting evidence that belongs to that
+ * result. Result, Evidence, and Report surfaces consume this same payload so
+ * a single inspection ID always renders one coherent result. A future API
+ * adapter can return this shape unchanged.
+ */
+export type InspectionResultData = InspectionResult & {
+  evidence: InspectionEvidence[]
+}
+
 export type InspectionReport = {
   result: InspectionResult
   evidence: InspectionEvidence[]
