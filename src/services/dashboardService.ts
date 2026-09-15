@@ -3,8 +3,8 @@ import type { DashboardData } from '../types/dashboard'
 
 /** Dashboard data boundary; replace with an API client once its contract exists. */
 export const dashboardService = {
-  getDashboard(): Promise<DashboardData> {
-    const records = inspectionRepository.list()
+  async getDashboard(): Promise<DashboardData> {
+    const records = await inspectionRepository.list()
     const completed = records.filter((record) => record.processingStatus === 'completed' && record.complianceStatus)
     const compliant = completed.filter((record) => record.complianceStatus === 'compliant').length
     const nonCompliant = completed.filter((record) => record.complianceStatus === 'non-compliant').length

@@ -2,23 +2,108 @@ import { inspectionEvidenceMock, inspectionResultMock } from '../mocks/result'
 import { inspectionHistoryMock } from '../mocks/history'
 import type { CreateInspectionInput, InspectionRecord, InspectionImage, InspectionProcessingStatus, InspectionResultData, ProductCategory } from '../types'
 
-// v2: re-seed dev data so inspections scanned before the evidence-source fix
-// (which stored another product's mock evidence) are not served stale.
-const storageKey = 'ai-compliance-inspector.inspections.v2'
+/**
+ * Development persistence boundary. Inspection records (including compressed
+ * inline image data URLs) are stored in IndexedDB, which has no ~5 MB
+ * localStorage-style quota, so repeated demo inspections cannot exhaust
+ * storage. The public API is asynchronous: every operation resolves only
+ * after IndexedDB confirms the read/write. Records are persisted and returned
+ * exactly as stored — no field normalization is applied.
+ */
+const dbName = 'ai-compliance-inspector'
+const dbVersion = 1
+const storeName = 'inspections'
 
-// The v1 → v2 storage-key bump left the old inspections blob in place. Nothing
-// reads it anymore, but it keeps consuming origin localStorage quota.
-const legacyStorageKey = 'ai-compliance-inspector.inspections.v1'
+// Obsolete localStorage inspection stores from before IndexedDB became
+// canonical. They are migrated once, then removed. Unrelated keys (settings,
+// etc.) are never touched and localStorage.clear() is never used.
+const legacyStorageKeys = [
+  'ai-compliance-inspector.inspections.v2',
+  'ai-compliance-inspector.inspections.v1',
+]
 
-// Removes the obsolete v1 blob at most once per session, on the first
-// repository read, so the quota is reclaimed whether or not the v2 store
-// already contains records.
-let legacyStorageCleaned = false
+let dbPromise: Promise<IDBDatabase> | null = null
+let initPromise: Promise<void> | null = null
 
-function cleanupLegacyStorage(): void {
-  if (legacyStorageCleaned) return
-  legacyStorageCleaned = true
-  try { localStorage.removeItem(legacyStorageKey) } catch { /* removal is best effort; never block repository reads. */ }
+function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+function openDb(): Promise<IDBDatabase> {
+  if (dbPromise) return dbPromise
+  dbPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, dbVersion)
+    request.onupgradeneeded = () => {
+      const db = request.result
+      if (!db.objectStoreNames.contains(storeName)) db.createObjectStore(storeName, { keyPath: 'inspectionId' })
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+  return dbPromise
+}
+
+/**
+ * One-time initialization: migrate any existing localStorage inspection data
+ * into IndexedDB, or seed development records when there is nothing to
+ * migrate. Migration is idempotent — it only runs while the store is empty,
+ * and legacy keys are removed only after their records are safely written.
+ */
+async function initStore(): Promise<void> {
+  const db = await openDb()
+  const store = db.transaction(storeName, 'readwrite').objectStore(storeName)
+  const existingCount = await requestToPromise(store.count())
+  if (existingCount > 0) return
+
+  const migrated: InspectionRecord[] = []
+  for (const legacyKey of legacyStorageKeys) {
+    try {
+      const raw = localStorage.getItem(legacyKey)
+      if (!raw) continue
+      const parsed = JSON.parse(raw) as InspectionRecord[]
+      if (Array.isArray(parsed)) {
+        for (const record of parsed) {
+          if (record && typeof record.inspectionId === 'string' && !migrated.some((existing) => existing.inspectionId === record.inspectionId)) migrated.push(record)
+        }
+      }
+    } catch {
+      // Unparsable legacy data is left untouched rather than destroyed.
+    }
+  }
+
+  const records = migrated.length ? migrated : seedRecords()
+  for (const record of records) await requestToPromise(store.put(record))
+
+  // Only after every record is safely persisted may the obsolete keys go.
+  for (const legacyKey of legacyStorageKeys) {
+    try { localStorage.removeItem(legacyKey) } catch { /* best effort; never blocks initialization. */ }
+  }
+}
+
+function dbReady(): Promise<IDBDatabase> {
+  initPromise ??= initStore().catch((error) => {
+    initPromise = null
+    throw error
+  })
+  return initPromise.then(() => openDb())
+}
+
+async function idbGetAll(): Promise<InspectionRecord[]> {
+  const db = await dbReady()
+  return requestToPromise(db.transaction(storeName).objectStore(storeName).getAll() as IDBRequest<InspectionRecord[]>)
+}
+
+async function idbGet(inspectionId: string): Promise<InspectionRecord | undefined> {
+  const db = await dbReady()
+  return requestToPromise(db.transaction(storeName).objectStore(storeName).get(inspectionId) as IDBRequest<InspectionRecord | undefined>)
+}
+
+async function idbPut(record: InspectionRecord): Promise<void> {
+  const db = await dbReady()
+  await requestToPromise(db.transaction(storeName, 'readwrite').objectStore(storeName).put(record))
 }
 
 function seedRecords(): InspectionRecord[] {
@@ -28,7 +113,7 @@ function seedRecords(): InspectionRecord[] {
   return inspectionHistoryMock.inspections.map((item) => findingRecord(item.inspectionId, item.productName, (item.category ?? '') as ProductCategory | '', item.inspectedAt, item.status, item.findingCount, item.highestSeverity)).map((record) => record.inspectionId === inspectionResultMock.inspectionId ? { ...record, productName: inspectionResultMock.productName, category: inspectionResultMock.category as ProductCategory, findings: inspectionResultMock.findings, evidence: inspectionEvidenceMock, complianceScore: inspectionResultMock.score, summary: inspectionResultMock.summary } : record)
 }
 
-function readRecords(): InspectionRecord[] {
+/*
   cleanupLegacyStorage()
   try {
     const raw = localStorage.getItem(storageKey)
@@ -50,6 +135,7 @@ function writeRecords(records: InspectionRecord[]) {
   localStorage.setItem(storageKey, JSON.stringify(records))
 }
 
+*/
 // Files are persisted inline as data URLs, so large originals would quickly
 // exceed the localStorage quota (the whole record list is rewritten on every
 // save). Small files keep the exact readAsDataURL output; larger images are
@@ -93,10 +179,10 @@ async function fileToDataUrl(file: File): Promise<string> {
 }
 
 export const inspectionRepository = {
-  list(): InspectionRecord[] { return readRecords() },
-  get(inspectionId: string): InspectionRecord | undefined { return readRecords().find((record) => record.inspectionId === inspectionId) },
-  getResultData(inspectionId: string): InspectionResultData | undefined {
-    const record = this.get(inspectionId)
+  async list(): Promise<InspectionRecord[]> { return idbGetAll() },
+  async get(inspectionId: string): Promise<InspectionRecord | undefined> { return idbGet(inspectionId) },
+  async getResultData(inspectionId: string): Promise<InspectionResultData | undefined> {
+    const record = await this.get(inspectionId)
     if (!record || !record.complianceStatus) return undefined
     return {
       inspectionId: record.inspectionId,
@@ -110,8 +196,8 @@ export const inspectionRepository = {
       evidence: record.evidence,
     }
   },
-  save(record: InspectionRecord): InspectionRecord { const records = readRecords().filter((item) => item.inspectionId !== record.inspectionId); writeRecords([record, ...records]); return record },
-  update(inspectionId: string, patch: Partial<InspectionRecord>): InspectionRecord | undefined { const record = this.get(inspectionId); if (!record) return undefined; return this.save({ ...record, ...patch }) },
+  async save(record: InspectionRecord): Promise<InspectionRecord> { await idbPut(record); return record },
+  async update(inspectionId: string, patch: Partial<InspectionRecord>): Promise<InspectionRecord | undefined> { const record = await this.get(inspectionId); if (!record) return undefined; return this.save({ ...record, ...patch }) },
   async create(input: CreateInspectionInput, inspectionId: string): Promise<InspectionRecord> {
     const images: InspectionImage[] = await Promise.all(input.images.map(async (image, index) => ({ id: `${inspectionId}-image-${index + 1}`, name: image.file.name, previewUrl: await fileToDataUrl(image.file), role: image.role, size: image.file.size })))
     const record: InspectionRecord = { inspectionId, productName: input.productName.trim(), category: input.category, brand: input.brand.trim(), sku: input.sku.trim(), notes: input.notes.trim(), images, createdAt: new Date().toISOString(), processingStatus: 'created', findings: [], evidence: [] }
