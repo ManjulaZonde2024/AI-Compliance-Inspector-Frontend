@@ -9,7 +9,7 @@ import { Input } from '../components/ui/Input'
 import { inspectionService } from '../services'
 import { productCategories, type CreateInspectionInput, type ProductCategory } from '../types'
 
-type FormErrors = Partial<Record<'productName' | 'category' | 'images', string>>
+type FormErrors = Partial<Record<'productName' | 'category' | 'images' | 'barcodeWidth' | 'barcodeHeight', string>>
 type SubmissionState = 'idle' | 'submitting' | 'success' | 'error'
 
 const initialForm: CreateInspectionInput = {
@@ -27,6 +27,27 @@ export function NewInspectionPage() {
   const [errors, setErrors] = useState<FormErrors>({})
   const [submissionState, setSubmissionState] = useState<SubmissionState>('idle')
   const [createdId, setCreatedId] = useState<string | null>(null)
+  const [knowBarcodeWidth, setKnowBarcodeWidth] = useState(false)
+  const [knowBarcodeHeight, setKnowBarcodeHeight] = useState(false)
+  const [barcodeWidthText, setBarcodeWidthText] = useState('')
+  const [barcodeHeightText, setBarcodeHeightText] = useState('')
+
+  const barcodeUnknown = !knowBarcodeWidth && !knowBarcodeHeight
+
+  const clearBarcodeDimensions = () => {
+    setKnowBarcodeWidth(false)
+    setKnowBarcodeHeight(false)
+    setBarcodeWidthText('')
+    setBarcodeHeightText('')
+    setErrors((prev) => ({ ...prev, barcodeWidth: undefined, barcodeHeight: undefined }))
+  }
+
+  const parseDimension = (value: string) => {
+    if (value.trim() === '') return undefined
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed) || parsed <= 0) return NaN
+    return parsed
+  }
 
   useEffect(() => {
     if (submissionState !== 'success' || !createdId) return
@@ -39,6 +60,10 @@ export function NewInspectionPage() {
     if (!form.productName.trim()) nextErrors.productName = 'Enter the product name to continue.'
     if (!form.category) nextErrors.category = 'Select a product category.'
     if (form.images.length === 0) nextErrors.images = 'Upload at least one label image to begin an inspection.'
+    const widthValue = knowBarcodeWidth ? parseDimension(barcodeWidthText) : undefined
+    if (widthValue !== undefined && Number.isNaN(widthValue)) nextErrors.barcodeWidth = 'Enter a valid barcode width in mm (a number greater than 0).'
+    const heightValue = knowBarcodeHeight ? parseDimension(barcodeHeightText) : undefined
+    if (heightValue !== undefined && Number.isNaN(heightValue)) nextErrors.barcodeHeight = 'Enter a valid barcode height in mm (a number greater than 0).'
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -47,7 +72,12 @@ export function NewInspectionPage() {
     event.preventDefault()
     if (submissionState === 'submitting' || !validate()) return
     setSubmissionState('submitting')
-    inspectionService.createInspection(form).then(
+    const intake: CreateInspectionInput = { ...form }
+    const width = knowBarcodeWidth ? parseDimension(barcodeWidthText) : undefined
+    const height = knowBarcodeHeight ? parseDimension(barcodeHeightText) : undefined
+    if (width !== undefined && !Number.isNaN(width)) intake.barcodeWidthMm = width
+    if (height !== undefined && !Number.isNaN(height)) intake.barcodeHeightMm = height
+    inspectionService.createInspection(intake).then(
       ({ inspectionId }) => { setCreatedId(inspectionId); setSubmissionState('success') },
       () => setSubmissionState('error'),
     )
@@ -71,6 +101,99 @@ export function NewInspectionPage() {
             <div className="border-t border-border/70 pt-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted">Identification</p>
               <div className="mt-3 grid items-end gap-4 sm:grid-cols-2"><Input label="Brand or manufacturer" placeholder="Optional" value={form.brand} onChange={(event) => setForm({ ...form, brand: event.target.value })} /><Input label="Product identifier / SKU" placeholder="Optional" value={form.sku} onChange={(event) => setForm({ ...form, sku: event.target.value })} />
+              </div>
+            </div>
+            <div className="border-t border-border/70 pt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted">Barcode dimensions</p>
+              <p className="mt-1 text-sm font-medium text-ink">Barcode physical dimension <span className="font-normal text-muted">(optional)</span></p>
+              <div className="mt-3 space-y-4">
+                <div>
+                  <label className="flex cursor-pointer items-center gap-2.5 text-sm text-ink">
+                    <input
+                      type="checkbox"
+                      checked={knowBarcodeWidth}
+                      onChange={(event) => {
+                        setKnowBarcodeWidth(event.target.checked)
+                        if (!event.target.checked) {
+                          setBarcodeWidthText('')
+                          setErrors((prev) => ({ ...prev, barcodeWidth: undefined }))
+                        }
+                      }}
+                      className="h-4 w-4 shrink-0 accent-brand"
+                    />
+                    I know the barcode width
+                  </label>
+                  <div className="mt-2 flex items-center gap-2 pl-[1.625rem]">
+                    <label htmlFor="barcode-width" className="sr-only">Barcode width</label>
+                    <input
+                      id="barcode-width"
+                      type="number"
+                      min={0}
+                      step="any"
+                      inputMode="decimal"
+                      placeholder="40"
+                      value={barcodeWidthText}
+                      disabled={!knowBarcodeWidth}
+                      aria-invalid={errors.barcodeWidth ? true : undefined}
+                      onChange={(event) => {
+                        setBarcodeWidthText(event.target.value)
+                        setErrors((prev) => ({ ...prev, barcodeWidth: undefined }))
+                      }}
+                      className={`h-10 w-24 rounded-md border bg-surface px-3 text-sm text-ink transition-colors hover:border-navy-line/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50 ${errors.barcodeWidth ? 'border-danger' : 'border-border'}`}
+                    />
+                    <span className="text-sm text-muted">mm</span>
+                  </div>
+                  {errors.barcodeWidth ? <p className="mt-1 pl-[1.625rem] text-sm text-danger">{errors.barcodeWidth}</p> : null}
+                </div>
+                <div>
+                  <label className="flex cursor-pointer items-center gap-2.5 text-sm text-ink">
+                    <input
+                      type="checkbox"
+                      checked={knowBarcodeHeight}
+                      onChange={(event) => {
+                        setKnowBarcodeHeight(event.target.checked)
+                        if (!event.target.checked) {
+                          setBarcodeHeightText('')
+                          setErrors((prev) => ({ ...prev, barcodeHeight: undefined }))
+                        }
+                      }}
+                      className="h-4 w-4 shrink-0 accent-brand"
+                    />
+                    I know the barcode height
+                  </label>
+                  <div className="mt-2 flex items-center gap-2 pl-[1.625rem]">
+                    <label htmlFor="barcode-height" className="sr-only">Barcode height</label>
+                    <input
+                      id="barcode-height"
+                      type="number"
+                      min={0}
+                      step="any"
+                      inputMode="decimal"
+                      placeholder="15"
+                      value={barcodeHeightText}
+                      disabled={!knowBarcodeHeight}
+                      aria-invalid={errors.barcodeHeight ? true : undefined}
+                      onChange={(event) => {
+                        setBarcodeHeightText(event.target.value)
+                        setErrors((prev) => ({ ...prev, barcodeHeight: undefined }))
+                      }}
+                      className={`h-10 w-24 rounded-md border bg-surface px-3 text-sm text-ink transition-colors hover:border-navy-line/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50 ${errors.barcodeHeight ? 'border-danger' : 'border-border'}`}
+                    />
+                    <span className="text-sm text-muted">mm</span>
+                  </div>
+                  {errors.barcodeHeight ? <p className="mt-1 pl-[1.625rem] text-sm text-danger">{errors.barcodeHeight}</p> : null}
+                </div>
+                <button
+                  type="button"
+                  aria-pressed={barcodeUnknown}
+                  onClick={clearBarcodeDimensions}
+                  className="flex cursor-pointer items-center gap-2.5 rounded-md text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                >
+                  <span aria-hidden className={`flex h-4 w-4 items-center justify-center rounded-full border ${barcodeUnknown ? 'border-brand' : 'border-border-strong/60'}`}>
+                    {barcodeUnknown ? <span className="h-2 w-2 rounded-full bg-brand" /> : null}
+                  </span>
+                  I don&apos;t know
+                </button>
               </div>
             </div>
             <div className="border-t border-border/70 pt-4">

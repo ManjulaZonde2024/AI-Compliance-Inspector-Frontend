@@ -1,18 +1,11 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { PageHeader } from '../components/layout/PageHeader'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { LoadingState, Skeleton } from '../components/ui/LoadingState'
 import { settingsService } from '../services'
-import type { RagSettings, SchedulerFrequency } from '../types'
-
-const frequencyLabels: Record<SchedulerFrequency, string> = {
-  '6-hours': 'Every 6 hours',
-  '12-hours': 'Every 12 hours',
-  daily: 'Daily',
-  weekly: 'Weekly',
-}
+import type { RagSettings } from '../types'
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('en-IN', {
@@ -21,50 +14,53 @@ function formatDate(value: string) {
   }).format(new Date(value))
 }
 
+// Temporary demonstration values for the latest-sync summary until the RAG
+// backend is integrated. The checked count is derived from the loaded mock
+// source count; the remaining figures are static demo values. The backend
+// team will replace these behind the existing settingsService boundary.
+function latestSyncSummary(indexedSources: number) {
+  return [
+    { label: 'Rules checked', value: String(indexedSources) },
+    { label: 'Rules updated', value: '3' },
+    { label: 'New rules', value: '1' },
+  ]
+}
+
 export function SettingsPage() {
   const [settings, setSettings] = useState<RagSettings | null>(null)
-  const [savedSettings, setSavedSettings] = useState<RagSettings | null>(null)
   const [failed, setFailed] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null)
+  const timer = useRef<number | null>(null)
 
   useEffect(() => {
     settingsService.getRagSettings().then(
       (loaded) => {
         setSettings(loaded)
-        setSavedSettings(loaded)
         setMessage(null)
       },
       () => setFailed(true),
     )
+    return () => {
+      if (timer.current !== null) window.clearTimeout(timer.current)
+    }
   }, [])
 
-  const isDirty = useMemo(() => {
-    if (!settings || !savedSettings) return false
-    return JSON.stringify(settings) !== JSON.stringify(savedSettings)
-  }, [savedSettings, settings])
-
-  const save = () => {
-    if (!settings || saving) return
-    setSaving(true)
+  const runSynchronization = () => {
+    if (syncing) return
+    setSyncing(true)
     setMessage(null)
 
-    settingsService
-      .saveRagSettings(settings)
-      .then(
-        (saved) => {
-          setSettings(saved)
-          setSavedSettings(saved)
-          setMessage({ tone: 'success', text: 'Scheduler configuration saved.' })
-        },
-        () => {
-          setMessage({
-            tone: 'danger',
-            text: 'Configuration could not be saved. Please try again.',
-          })
-        },
-      )
-      .finally(() => setSaving(false))
+    // Minimal frontend-only mock interaction until the RAG backend is
+    // connected: loading state, existing mock data retained, then a
+    // success state. No network requests.
+    timer.current = window.setTimeout(() => {
+      setSyncing(false)
+      setMessage({
+        tone: 'success',
+        text: 'Synchronization completed successfully. The knowledge base reflects the most recent official source refresh.',
+      })
+    }, 1200)
   }
 
   if (!settings && !failed) {
@@ -92,12 +88,13 @@ export function SettingsPage() {
   }
 
   const kbSynced = settings.knowledgeBaseStatus === 'synced'
+  const summary = latestSyncSummary(settings.indexedSources)
 
   return (
     <div>
       <PageHeader
         title="Settings"
-        description="Manage Legal Metrology knowledge-base synchronization and update schedules."
+        description="Knowledge base synchronization and status."
       />
 
       <p className="mb-5 max-w-3xl text-sm leading-6 text-muted">
@@ -161,114 +158,52 @@ export function SettingsPage() {
               <dt className="text-muted">Scope</dt>
               <dd className="font-medium text-ink">Legal Metrology references</dd>
             </div>
+            <div className="flex items-center justify-between gap-4 py-3">
+              <dt className="text-muted">Automatic refresh</dt>
+              <dd className="font-medium text-ink">Once every week</dd>
+            </div>
           </dl>
         </Card>
 
-        <Card
-          title="Knowledge-base synchronization"
-          description="Configure when the knowledge base refresh should be requested. Scheduling is handled by the connected backend service."
-        >
-          <div className="mt-5 flex items-center justify-between rounded-md border border-border bg-bg p-4">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-medium text-ink">Enable scheduler</p>
-                <Badge tone={settings.enabled ? 'success' : 'default'}>
-                  {settings.enabled ? 'On' : 'Off'}
-                </Badge>
-              </div>
-              <p className="mt-1 text-sm text-muted">
-                Allow scheduled source synchronization requests.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={settings.enabled}
-              aria-label="Enable scheduler"
-              aria-describedby="scheduler-state-note"
-              onClick={() => {
-                setSettings({ ...settings, enabled: !settings.enabled })
-                setMessage(null)
-              }}
-              className={`relative h-6 w-11 rounded-full transition-colors ${
-                settings.enabled ? 'bg-brand' : 'bg-border-strong'
-              }`}
-            >
-              <span
-                className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                  settings.enabled ? 'left-6' : 'left-1'
-                }`}
-              />
-            </button>
-          </div>
-
-          <p
-            id="scheduler-state-note"
-            className={`mt-3 rounded-md border px-3 py-2.5 text-sm ${
-              settings.enabled
-                ? 'border-brand/25 bg-brand-light/60 text-ink'
-                : 'border-border bg-bg text-muted'
-            }`}
+        <div className="flex min-w-0 flex-col gap-5">
+          <Card
+            title="Latest synchronization"
+            description="Summary of changes from the most recent knowledge base refresh."
           >
-            {settings.enabled
-              ? `Scheduling is on. The connected service is configured to refresh ${frequencyLabels[settings.frequency].toLowerCase()}.`
-              : 'Scheduling is off. The knowledge base will not refresh automatically until the scheduler is enabled and changes are saved.'}
-          </p>
-
-          <label className="mt-5 flex flex-col gap-1.5 text-sm font-medium text-ink">
-            Frequency
-            <select
-              value={settings.frequency}
-              onChange={(event) => {
-                setSettings({
-                  ...settings,
-                  frequency: event.target.value as SchedulerFrequency,
-                })
-                setMessage(null)
-              }}
-              className="h-10 rounded-md border border-border bg-surface px-3 text-sm font-normal text-ink focus-visible:outline-2 focus-visible:outline-brand"
-            >
-              {Object.entries(frequencyLabels).map(([value, label]) => (
-                <option value={value} key={value}>
-                  {label}
-                </option>
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {summary.map((item) => (
+                <div key={item.label} className="rounded-md border border-border bg-bg p-3">
+                  <p className="text-2xl font-semibold text-ink">{item.value}</p>
+                  <p className="mt-1 text-xs text-muted">{item.label}</p>
+                </div>
               ))}
-            </select>
-          </label>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-muted">
+              Latest synchronization completed successfully. The knowledge base
+              reflects the most recent official source refresh.
+            </p>
+          </Card>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-md border border-border p-3">
-              <p className="text-xs text-muted">Last successful run</p>
-              <p className="mt-1 text-sm font-medium text-ink">
-                {formatDate(settings.lastRun)}
+          <Card
+            title="Manual synchronization"
+            description="Refresh the Legal Metrology knowledge base using the latest available official sources."
+          >
+            <div className="mt-5 rounded-md border border-border bg-bg p-4">
+              <p className="font-medium text-ink">Automatic synchronization</p>
+              <p className="mt-1 text-sm text-muted">
+                The knowledge base is refreshed automatically once every week.
               </p>
             </div>
-            <div className="rounded-md border border-border p-3">
-              <p className="text-xs text-muted">Next scheduled run</p>
-              {settings.enabled ? (
-                <p className="mt-1 text-sm font-medium text-ink">
-                  {formatDate(settings.nextRun)}
-                </p>
-              ) : (
-                <>
-                  <p className="mt-1 text-sm font-medium text-muted">Not scheduled</p>
-                  <p className="mt-0.5 text-xs text-muted">
-                    Scheduling is off — no run is planned.
-                  </p>
-                </>
-              )}
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted">
+                {syncing ? 'Checking for updates…' : 'Check for rule updates'}
+              </p>
+              <Button onClick={runSynchronization} disabled={syncing}>
+                {syncing ? 'Checking for updates…' : 'Check for rule updates'}
+              </Button>
             </div>
-          </div>
-
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-muted">
-              {saving ? 'Saving…' : isDirty ? 'Unsaved changes' : message?.tone === 'success' ? '✓ Changes saved' : 'Saved'}
-            </div>
-            <Button onClick={save} disabled={saving || !isDirty}>
-              {saving ? 'Saving…' : 'Save changes'}
-            </Button>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
 
       <Card

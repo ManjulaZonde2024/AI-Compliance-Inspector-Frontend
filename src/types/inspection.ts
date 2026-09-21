@@ -32,6 +32,13 @@ export type CreateInspectionInput = {
   sku: string
   notes: string
   images: InspectionImageInput[]
+  /**
+   * Optional known physical barcode dimensions in millimetres.
+   * Retained in frontend intake state; the backend intake contract will
+   * consume these once it exists. Absent when the inspector doesn't know them.
+   */
+  barcodeWidthMm?: number
+  barcodeHeightMm?: number
 }
 
 export type CreateInspectionResult = {
