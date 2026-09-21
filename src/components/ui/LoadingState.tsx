@@ -7,7 +7,7 @@ type SkeletonProps = {
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
-      className={cn('skeleton-shimmer rounded-md bg-border', className)}
+      className={cn('skeleton-shimmer rounded-lg bg-border/70', className)}
       aria-hidden
     />
   )
@@ -22,7 +22,7 @@ export function LoadingState({ label = 'Loading' }: LoadingStateProps) {
     <div
       role="status"
       aria-live="polite"
-      className="flex items-center gap-3 text-sm text-muted"
+      className="flex items-center gap-3 text-[13px] text-muted"
     >
       <Skeleton className="h-4 w-24" />
       <span>{label}</span>

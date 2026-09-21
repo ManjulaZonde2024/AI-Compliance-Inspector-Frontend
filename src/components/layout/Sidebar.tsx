@@ -20,20 +20,30 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
   return (
     <div className="flex h-full flex-col bg-navy text-white">
-      <div className="border-b border-navy-line px-5 py-5">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/50">
-          Workstation
-        </p>
-        <p className="mt-1 text-base font-semibold tracking-tight">
-          AI Compliance Inspector
-        </p>
+      <div className="border-b border-white/10 px-5 pb-5 pt-6">
+        <div className="flex items-center gap-3">
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand text-sm font-bold tracking-tight text-white shadow-sm"
+            aria-hidden
+          >
+            PD
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+              Workstation
+            </p>
+            <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-white">
+              Packet Decoder
+            </p>
+          </div>
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Primary">
-        <p className="px-2 pb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-white/40">
+      <nav className="flex-1 overflow-y-auto px-3 py-5" aria-label="Primary">
+        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/35">
           Workspace
         </p>
-        <ul className="flex flex-col gap-0.5">
+        <ul className="flex flex-col gap-1">
           {primaryNav.map((item) => (
             <li key={item.to}>
               <NavLink
@@ -42,10 +52,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
-                    'block rounded-md border border-transparent px-3 py-2 text-sm transition-[background-color,border-color,color,transform] duration-150',
+                    'block rounded-lg border border-transparent px-3 py-2 text-sm font-medium tracking-[-0.006em] transition-[background-color,border-color,color,box-shadow] duration-150',
                     isActive
-                      ? 'border-white/10 bg-white/10 text-white'
-                      : 'text-white/70 hover:translate-x-0.5 hover:bg-white/5 hover:text-white',
+                      ? 'border-brand/30 bg-brand/20 text-white shadow-[inset_3px_0_0_0_var(--color-accent)]'
+                      : 'text-white/60 hover:translate-x-0.5 hover:bg-white/[0.06] hover:text-white',
                   )
                 }
               >
@@ -56,14 +66,15 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         </ul>
 
         {showInspectionNav && inspectionId ? (
-          <div className="mt-6">
-            <p className="px-2 pb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-white/40">
+          <div className="mt-7">
+            <div className="mb-2 h-px bg-white/10" aria-hidden />
+            <p className="px-3 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/35">
               Inspection
             </p>
-            <p className="truncate px-2 pb-2 font-mono text-xs text-white/45">
+            <p className="truncate px-3 pb-2 font-mono text-xs text-white/45">
               {inspectionId}
             </p>
-            <ul className="flex flex-col gap-0.5">
+            <ul className="flex flex-col gap-1">
               {inspectionSteps.map((item) => (
                 <li key={item.step}>
                   <NavLink
@@ -71,10 +82,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cn(
-                        'block rounded-md border border-transparent px-3 py-2 text-sm transition-[background-color,border-color,color,transform] duration-150',
+                        'block rounded-lg border border-transparent px-3 py-2 text-sm font-medium tracking-[-0.006em] transition-[background-color,border-color,color,box-shadow] duration-150',
                         isActive
-                          ? 'border-brand/40 bg-brand text-white'
-                          : 'text-white/70 hover:translate-x-0.5 hover:bg-white/5 hover:text-white',
+                          ? 'border-brand/40 bg-brand/25 text-white shadow-[inset_3px_0_0_0_var(--color-accent)]'
+                          : 'text-white/60 hover:translate-x-0.5 hover:bg-white/[0.06] hover:text-white',
                       )
                     }
                   >
@@ -87,8 +98,11 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         ) : null}
       </nav>
 
-      <div className="border-t border-navy-line px-5 py-4 text-xs text-white/45">
-        Compliance review workspace
+      <div className="border-t border-white/10 px-5 py-4">
+        <p className="flex items-center gap-2 text-xs leading-5 text-white/40">
+          <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
+          Compliance review workspace
+        </p>
       </div>
     </div>
   )

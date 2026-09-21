@@ -19,17 +19,17 @@ export function Input({
   return (
     <div className="flex flex-col gap-1.5">
       {label ? (
-        <label htmlFor={inputId} className="text-sm font-medium text-ink">
+        <label htmlFor={inputId} className="text-[13px] font-semibold text-ink">
           {label}
         </label>
       ) : null}
       <input
         id={inputId}
         className={cn(
-          'h-10 w-full rounded-md border bg-surface px-3 text-sm text-ink placeholder:text-muted',
-          'border-border transition-colors hover:border-navy-line/40',
-          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
-          'disabled:cursor-not-allowed disabled:bg-bg disabled:opacity-60',
+          'h-10 w-full rounded-lg border bg-surface px-3 text-sm text-ink shadow-sm placeholder:text-muted/80',
+          'border-border-strong/50 transition-[border-color,box-shadow,background-color] hover:border-brand/45',
+          'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand',
+          'disabled:cursor-not-allowed disabled:bg-surface-soft disabled:opacity-60',
           error && 'border-danger',
           className,
         )}

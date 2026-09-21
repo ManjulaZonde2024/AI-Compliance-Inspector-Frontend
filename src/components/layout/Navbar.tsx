@@ -1,4 +1,5 @@
 import { Button } from '../ui/Button'
+import { ThemeToggle } from '../ui/ThemeToggle'
 
 type NavbarProps = {
   title: string
@@ -8,7 +9,7 @@ type NavbarProps = {
 
 export function Navbar({ title, onMenuClick, showMenuButton }: NavbarProps) {
   return (
-    <header className="flex h-16 items-center gap-3 border-b border-border bg-surface px-5 shadow-sm sm:px-8 lg:px-10">
+    <header className="sticky top-0 z-30 flex h-[4.25rem] items-center gap-3 border-b border-border bg-surface/85 px-4 shadow-sm backdrop-blur-md transition-colors duration-200 sm:px-8 lg:px-10">
       {showMenuButton ? (
         <Button
           variant="ghost"
@@ -20,8 +21,12 @@ export function Navbar({ title, onMenuClick, showMenuButton }: NavbarProps) {
           <MenuIcon />
         </Button>
       ) : null}
+      <span className="h-5 w-1 shrink-0 rounded-full bg-brand" aria-hidden />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-ink">{title}</p>
+        <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-ink">{title}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <ThemeToggle />
       </div>
     </header>
   )

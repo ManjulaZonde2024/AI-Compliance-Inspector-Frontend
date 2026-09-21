@@ -117,7 +117,7 @@ export function SettingsPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
         <Card
           title="Knowledge base status"
           description="Frontend representation of the returned RAG knowledge source state."
@@ -191,7 +191,7 @@ export function SettingsPage() {
                 setMessage(null)
               }}
               className={`relative h-6 w-11 rounded-full transition-colors ${
-                settings.enabled ? 'bg-brand' : 'bg-slate-300'
+                settings.enabled ? 'bg-brand' : 'bg-border-strong'
               }`}
             >
               <span
@@ -272,7 +272,7 @@ export function SettingsPage() {
       </div>
 
       <Card
-        className="mt-6"
+        className="mt-5"
         title="Legal Metrology sources"
         description="The connected knowledge workflow is intended to use official references. This interface does not scrape or update sources."
       >

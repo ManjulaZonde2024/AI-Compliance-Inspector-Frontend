@@ -1,30 +1,81 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
 
-  --color-bg: #f7f9fc;
+  /* Plum x Charcoal light theme — neutral surfaces, plum brand accent */
+  --color-bg: #f7f5f8;
   --color-surface: #ffffff;
-  --color-ink: #0f172a;
-  --color-muted: #64748b;
-  --color-border: #e2e8f0;
-  --color-brand: #2563eb;
-  --color-brand-dark: #1d4ed8;
-  --color-brand-light: #eff6ff;
-  --color-success: #16a34a;
-  --color-warning: #d97706;
-  --color-danger: #dc2626;
-  --color-info: #2563eb;
-  --color-navy: #0b1f3a;
-  --color-navy-mid: #132a4a;
-  --color-navy-line: #1e3a5f;
+  --color-surface-soft: #fcfafc;
+  --color-ink: #1d1a20;
+  --color-muted: #6f6872;
+  --color-border: #e5dfe6;
+  --color-border-strong: #cfc4d1;
 
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
+  --color-brand: #7a3e68;
+  --color-brand-dark: #663254;
+  --color-brand-light: #f3e8f0;
+  --color-accent: #b56b98;
+  --color-accent-light: #f7edf3;
 
-  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
-  --shadow-md: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.04);
+  --color-success: #1e7a46;
+  --color-warning: #b45309;
+  --color-danger: #c0352b;
+  --color-info: #6f6872;
+
+  --color-navy: #211b24;
+  --color-navy-mid: #2a232e;
+  --color-navy-line: #453a49;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+
+  --shadow-sm: 0 1px 2px rgb(29 26 32 / 0.05);
+  --shadow-md:
+    0 1px 2px rgb(29 26 32 / 0.05), 0 4px 14px -6px rgb(60 45 60 / 0.12);
+  --shadow-lg:
+    0 1px 2px rgb(29 26 32 / 0.06), 0 12px 32px -12px rgb(60 45 60 / 0.2);
+}
+
+/* Plum x Charcoal dark theme — layered charcoal, restrained plum accents. */
+[data-theme='dark'] {
+  --color-bg: #100d12;
+  --color-surface: #18141b;
+  --color-surface-soft: #211b24;
+  --color-ink: #f5eff4;
+  --color-muted: #aaa1ac;
+  --color-border: #302832;
+  --color-border-strong: #453a49;
+
+  --color-brand: #c06a9f;
+  --color-brand-dark: #d17bae;
+  --color-brand-light: #2b1d29;
+  --color-accent: #8f527a;
+  --color-accent-light: #2b1d29;
+
+  --color-success: #3cb179;
+  --color-warning: #e8a23d;
+  --color-danger: #e06055;
+  --color-info: #aaa1ac;
+
+  --color-navy: #141016;
+  --color-navy-mid: #1a151d;
+  --color-navy-line: #322a36;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45);
+  --shadow-md:
+    0 1px 2px rgb(0 0 0 / 0.5), 0 6px 20px -8px rgb(0 0 0 / 0.65);
+  --shadow-lg:
+    0 1px 2px rgb(0 0 0 / 0.55), 0 16px 42px -14px rgb(0 0 0 / 0.7);
+
+  color-scheme: dark;
+}
+
+:root {
+  color-scheme: light;
 }
 
 @layer base {
@@ -39,89 +90,262 @@
   body {
     margin: 0;
     min-height: 100svh;
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    line-height: 1.55;
+    transition:
+      background-color 240ms ease,
+      color 240ms ease;
   }
 
   #root {
     min-height: 100svh;
   }
 
+  ::selection {
+    background: var(--color-brand);
+    color: #fff;
+  }
+
+  [data-theme='dark'] ::selection {
+    background: rgb(192 106 159 / 0.45);
+    color: #fff;
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-brand);
     outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    line-height: 1.25;
+    letter-spacing: -0.011em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 }
 
 @keyframes page-enter {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes count-reveal {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes progress-reveal {
-  from { transform: scaleX(0); transform-origin: left; }
-  to { transform: scaleX(1); transform-origin: left; }
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
 }
 
 @keyframes donut-reveal {
-  from { opacity: 0; transform: scale(0.92); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes scan-line {
-  from { transform: translateY(-100%); }
-  to { transform: translateY(500%); }
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(500%);
+  }
 }
 
 @keyframes status-pop {
-  from { opacity: 0; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes finding-enter {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes welcome-enter {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes welcome-preview {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes welcome-step {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@layer components {
-  .skeleton-shimmer { background-image: linear-gradient(100deg, rgb(226 232 240) 25%, rgb(241 245 249) 45%, rgb(226 232 240) 65%); background-size: 220% 100%; animation: skeleton-shimmer 1.5s ease-in-out infinite; }
-  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 360ms ease-out, transform 360ms ease-out; transition-delay: var(--reveal-delay, 0ms); }
-  .reveal-visible { opacity: 1; transform: translateY(0); }
-  .page-enter { animation: page-enter 180ms ease-out both; }
-  .count-reveal { animation: count-reveal 220ms ease-out both; }
-  .progress-reveal { animation: progress-reveal 600ms ease-out both; }
-  .donut-reveal { animation: donut-reveal 500ms ease-out both; }
-  .status-pop { animation: status-pop 220ms ease-out both; }
-  .finding-enter { animation: finding-enter 220ms ease-out both; }
-  .scan-line { animation: scan-line 1.8s ease-in-out infinite; }
-  .welcome-enter { animation: welcome-enter 240ms ease-out both; }
-  .welcome-console { animation: welcome-preview 300ms ease-out 90ms both; }
-  .welcome-surface { animation: welcome-preview 300ms ease-out 90ms both; }
-  .welcome-capability { animation: welcome-enter 240ms ease-out both; }
-  .welcome-step { animation: welcome-step 240ms ease-out both; }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes skeleton-shimmer {
-  from { background-position: 180% 0; }
-  to { background-position: -20% 0; }
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+
+@layer components {
+  .skeleton-shimmer {
+    background-image: linear-gradient(
+      100deg,
+      rgb(140 130 143 / 0.22) 25%,
+      rgb(140 130 143 / 0.1) 45%,
+      rgb(140 130 143 / 0.22) 65%
+    );
+    background-size: 220% 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .page-enter {
+    animation: page-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .count-reveal {
+    animation: count-reveal 240ms ease-out both;
+  }
+  .progress-reveal {
+    animation: progress-reveal 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .donut-reveal {
+    animation: donut-reveal 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .status-pop {
+    animation: status-pop 220ms ease-out both;
+  }
+  .finding-enter {
+    animation: finding-enter 220ms ease-out both;
+  }
+  .scan-line {
+    animation: scan-line 1.8s ease-in-out infinite;
+  }
+  .welcome-enter {
+    animation: welcome-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .welcome-console {
+    animation: welcome-preview 320ms cubic-bezier(0.22, 1, 0.36, 1) 90ms both;
+  }
+  .welcome-surface {
+    animation: welcome-preview 320ms cubic-bezier(0.22, 1, 0.36, 1) 90ms both;
+  }
+  .welcome-capability {
+    animation: welcome-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .welcome-step {
+    animation: welcome-step 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+/*
+ * Centralized dark-mode compatibility for the few remaining hardcoded
+ * light illustration shades (landing label mock, evidence canvas, scan
+ * staging well, domain-focus panel). Unlayered so these win over the
+ * matching utilities, and scoped so they apply only under
+ * [data-theme='dark']. Pages stay untouched; the token system remains
+ * the single source of truth.
+ */
+/* Readability guard: light-on-dark bubbles stay legible in dark mode,
+   where --color-ink itself becomes near-white (dashboard chart tooltip). */
+[data-theme='dark'] .bg-ink.text-white {
+  color: var(--color-bg);
+}
+[data-theme='dark'] .bg-white {
+  background-color: var(--color-surface);
+}
+[data-theme='dark'] [class*='bg-[#f8fafc]'],
+[data-theme='dark'] [class*='bg-[#f1f5f9]'],
+[data-theme='dark'] .bg-slate-50,
+[data-theme='dark'] .bg-slate-100 {
+  background-color: var(--color-surface-soft);
+}
+[data-theme='dark'] [class*='linear-gradient'] {
+  background: var(--color-surface);
+  background-image: none;
+}
+[data-theme='dark'] .text-navy {
+  color: var(--color-ink);
+}
+[data-theme='dark'] .border-navy {
+  border-color: var(--color-border-strong);
+}
+[data-theme='dark'] .border-slate-300 {
+  border-color: var(--color-border);
+}
+[data-theme='dark'] .text-slate-400 {
+  color: var(--color-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -141,5 +365,7 @@
     transition: none;
   }
 
-  .skeleton-shimmer { animation: none; }
+  .skeleton-shimmer {
+    animation: none;
+  }
 }

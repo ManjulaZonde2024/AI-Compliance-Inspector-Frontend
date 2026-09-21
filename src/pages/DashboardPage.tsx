@@ -49,22 +49,22 @@ function CommandHeader({ data, onNewInspection }: { data: DashboardData; onNewIn
   const counts = getOutcomeCounts(data)
   const violationCount = getViolationCount(data)
   return (
-    <header className="relative overflow-hidden rounded-lg border border-navy-line/20 bg-navy px-5 py-5 text-white shadow-[0_18px_48px_rgb(11_31_58_/_0.18)] sm:px-6">
-      <div className="absolute inset-0 bg-[linear-gradient(130deg,rgba(37,99,235,0.28),transparent_44%,rgba(22,163,74,0.13))]" aria-hidden />
-      <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="max-w-3xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-100/70">Automated inspection command center</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-normal md:text-3xl">Compliance Dashboard</h1>
-          <p className="mt-2 text-sm leading-6 text-blue-100/78">
+    <header className="welcome-enter relative overflow-hidden">
+      <span className="absolute inset-y-0 left-0 w-1 bg-brand" aria-hidden />
+      <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-stretch">
+        <div className="max-w-2xl px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+          <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted"><span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden />Automated inspection command center</p>
+          <h1 className="mt-2.5 text-3xl font-semibold tracking-[-0.025em] text-ink md:text-4xl md:leading-[1.08]">Compliance Dashboard</h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
             {counts.total} completed inspections, {counts.complianceRate}% compliant, {counts.nonCompliant} non-compliant outcome{counts.nonCompliant === 1 ? '' : 's'}, and {violationCount} returned violation{violationCount === 1 ? '' : 's'}.
           </p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="rounded-md border border-white/10 bg-white/[0.08] px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-100/60">Current pass rate</p>
-            <p className="mt-1 text-2xl font-semibold">{counts.complianceRate}%</p>
+        <div className="flex flex-row items-center gap-5 border-t border-border bg-surface-soft/50 px-5 py-5 sm:gap-6 sm:px-6 sm:py-6 lg:flex-col lg:items-end lg:justify-center lg:gap-4 lg:border-l lg:border-t-0 lg:px-8 lg:py-7">
+          <div className="lg:text-right">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Current pass rate</p>
+            <p className="donut-reveal mt-1 tabular-nums text-5xl font-semibold tracking-[-0.03em] text-ink lg:text-6xl">{counts.complianceRate}<span className="text-2xl font-semibold text-brand lg:text-3xl">%</span></p>
           </div>
-          <Button variant="onDark" onClick={onNewInspection}><PlusIcon /> New Inspection</Button>
+          <Button onClick={onNewInspection}><PlusIcon /> New Inspection</Button>
         </div>
       </div>
     </header>
@@ -87,17 +87,40 @@ function Metric({ label, value, suffix = '', context, tone, mark }: { label: str
   }, [value])
 
   return (
-    <div className="group relative overflow-hidden rounded-lg border border-border bg-surface p-4 shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-brand/25 hover:shadow-md sm:p-5">
-      <span className={`absolute inset-x-0 top-0 h-1 ${tone}`} aria-hidden />
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">{label}</p>
-          <p className="count-reveal mt-3 text-3xl font-semibold tracking-normal text-ink">{displayValue}{suffix}</p>
-          <p className="mt-1 text-xs leading-5 text-muted">{context}</p>
-        </div>
-        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-bg text-sm font-semibold text-ink transition-colors group-hover:bg-brand-light group-hover:text-brand" aria-hidden>{mark}</span>
-      </div>
+    <div className="group min-w-0 px-5 py-4 transition-colors duration-200 hover:bg-surface-soft sm:py-5">
+      <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.13em] text-muted"><span className={`h-1.5 w-1.5 shrink-0 rounded-full ${tone}`} aria-hidden />{label}</p>
+      <p className="count-reveal mt-2.5 flex items-baseline gap-2 text-ink">
+        <span className="metric-value tabular-nums text-3xl font-semibold tracking-[-0.02em]">{displayValue}{suffix}</span>
+        <span className="text-xs font-semibold text-muted/70" aria-hidden>{mark}</span>
+      </p>
+      <p className="mt-1 text-[13px] leading-5 text-muted">{context}</p>
     </div>
+  )
+}
+
+function KpiLedger({ data }: { data: DashboardData }) {
+  const counts = getOutcomeCounts(data)
+  const violationCount = getViolationCount(data)
+  return (
+    <section aria-label="Key metrics" className="border-t border-border">
+      <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-5">
+        <div className="bg-surface">
+          <Metric label="Total Inspections" value={counts.total} context="Completed inspection records" tone="bg-ink" mark="#" />
+        </div>
+        <div className="bg-surface">
+          <Metric label="Compliant" value={counts.compliant} context={`${counts.complianceRate}% of inspections`} tone="bg-success" mark="OK" />
+        </div>
+        <div className="bg-surface">
+          <Metric label="Non-Compliant" value={counts.nonCompliant} context={`${counts.nonCompliantRate}% with returned violations`} tone="bg-danger" mark="!" />
+        </div>
+        <div className="bg-surface">
+          <Metric label="Compliance Rate" value={counts.complianceRate} suffix="%" context="Compliant divided by completed" tone="bg-brand" mark="%" />
+        </div>
+        <div className="bg-surface sm:col-span-2 lg:col-span-1">
+          <Metric label="Violations" value={violationCount} context="Returned findings by severity" tone="bg-warning" mark="!" />
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -109,31 +132,31 @@ function ComplianceOverview({ data }: { data: DashboardData }) {
     { label: 'Non-compliant', value: counts.nonCompliant, color: 'bg-danger', text: 'text-danger' },
   ]
   return (
-    <Card className="overflow-hidden p-0">
+    <Card className="overflow-hidden p-0 transition-shadow duration-200 hover:shadow-lg">
       <div className="border-b border-border px-5 py-4 sm:px-6">
-        <h2 className="text-base font-semibold text-ink">Compliance Overview</h2>
-        <p className="mt-1 text-sm text-muted">Automated outcomes from completed inspections.</p>
+        <h2 className="text-lg font-semibold tracking-[-0.015em] text-ink">Compliance Overview</h2>
+        <p className="mt-1 text-sm leading-6 text-muted">Automated outcomes from completed inspections.</p>
       </div>
       <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-center">
-        <div className="donut-reveal relative mx-auto flex h-44 w-44 items-center justify-center rounded-full" style={{ background: `conic-gradient(var(--color-success) 0 ${compliantEnd}%, var(--color-danger) ${compliantEnd}% 100%)` }} role="img" aria-label={`${counts.complianceRate} percent compliant. ${counts.compliant} compliant and ${counts.nonCompliant} non-compliant inspections.`}>
-          <div className="flex h-[7.5rem] w-[7.5rem] flex-col items-center justify-center rounded-full border border-border bg-surface shadow-sm">
-            <span className="text-3xl font-semibold tracking-normal text-ink">{counts.complianceRate}%</span>
-            <span className="mt-0.5 text-xs font-semibold uppercase tracking-[0.12em] text-muted">Compliant</span>
+        <div className="donut-reveal relative mx-auto flex h-40 w-40 items-center justify-center rounded-full" style={{ background: `conic-gradient(var(--color-success) 0 ${compliantEnd}%, var(--color-danger) ${compliantEnd}% 100%)` }} role="img" aria-label={`${counts.complianceRate} percent compliant. ${counts.compliant} compliant and ${counts.nonCompliant} non-compliant inspections.`}>
+          <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border border-border bg-surface shadow-sm">
+            <span className="tabular-nums text-3xl font-semibold tracking-[-0.02em] text-ink">{counts.complianceRate}%</span>
+            <span className="mt-1 text-[11px] font-semibold uppercase tracking-[0.13em] text-muted">Compliant</span>
           </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold text-ink">{counts.compliant} of {counts.total} inspections are compliant.</p>
-          <p className="mt-1 text-sm leading-6 text-muted">{counts.nonCompliant} automated result{counts.nonCompliant === 1 ? '' : 's'} returned violations or declaration gaps.</p>
+        <div className="min-w-0">
+          <p className="text-[17px] font-semibold tracking-[-0.01em] text-ink">{counts.compliant} of {counts.total} inspections are compliant.</p>
+          <p className="mt-1.5 text-sm leading-6 text-muted">{counts.nonCompliant} automated result{counts.nonCompliant === 1 ? '' : 's'} returned violations or declaration gaps.</p>
           <div className="mt-5 grid gap-4 text-xs text-muted" aria-label="Compliance overview summary">
             {segments.map((segment) => {
               const width = counts.total ? (segment.value / counts.total) * 100 : 0
               return (
                 <div key={segment.label}>
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${segment.color}`} aria-hidden />{segment.label}</span>
-                    <strong className={segment.text}>{segment.value} ({Math.round(width)}%)</strong>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="inline-flex items-center gap-2 text-[13px] font-medium text-ink"><span className={`h-2.5 w-2.5 rounded-full ${segment.color}`} aria-hidden />{segment.label}</span>
+                    <strong className={`text-[13px] tabular-nums ${segment.text}`}>{segment.value} ({Math.round(width)}%)</strong>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-bg"><div className={`progress-reveal h-full rounded-full ${segment.color}`} style={{ width: `${width}%` }} /></div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-border/70"><div className={`progress-reveal h-full rounded-full ${segment.color}`} style={{ width: `${width}%` }} /></div>
                 </div>
               )
             })}
@@ -148,22 +171,22 @@ function SeverityInsight({ counts }: { counts: DashboardData['openFindingsBySeve
   const total = counts.high + counts.medium + counts.low
   const rows = [{ label: 'High', value: counts.high, color: 'bg-danger', text: 'text-danger' }, { label: 'Medium', value: counts.medium, color: 'bg-warning', text: 'text-warning' }, { label: 'Low', value: counts.low, color: 'bg-info', text: 'text-info' }]
   return (
-    <Card title="Detected Violations" description="Findings grouped by returned severity.">
+    <Card title="Detected Violations" description="Findings grouped by returned severity." className="transition-shadow duration-200 hover:shadow-lg">
       <div className="space-y-4">
         {rows.map((row) => {
           const width = total ? (row.value / total) * 100 : 0
           return (
             <div key={row.label}>
               <div className="mb-1.5 flex items-center justify-between text-sm">
-                <span className="inline-flex items-center gap-2 text-muted"><span className={`h-2 w-2 rounded-full ${row.color}`} aria-hidden />{row.label}</span>
-                <span className={`font-semibold ${row.text}`}>{row.value}</span>
+                <span className="inline-flex items-center gap-2 font-medium text-ink"><span className={`h-2 w-2 rounded-full ${row.color}`} aria-hidden />{row.label}</span>
+                <span className={`font-semibold tabular-nums ${row.text}`}>{row.value}</span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-bg"><div className={`progress-reveal h-full rounded-full ${row.color}`} style={{ width: `${width}%` }} /></div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-border/70"><div className={`progress-reveal h-full rounded-full ${row.color}`} style={{ width: `${width}%` }} /></div>
             </div>
           )
         })}
       </div>
-      <p className="mt-4 text-xs leading-5 text-muted">{total} finding{total === 1 ? '' : 's'} represented across recent completed inspections.</p>
+      <p className="mt-5 border-t border-border/70 pt-4 text-[13px] leading-5 text-muted">{total} finding{total === 1 ? '' : 's'} represented across recent completed inspections.</p>
     </Card>
   )
 }
@@ -171,69 +194,72 @@ function SeverityInsight({ counts }: { counts: DashboardData['openFindingsBySeve
 function RecentNonCompliantInspections({ data, onOpen, onViewAll }: { data: DashboardData; onOpen: (id: string) => void; onViewAll: () => void }) {
   const items = data.recentInspections.filter((inspection) => inspection.status !== 'compliant').slice(0, 4)
   return (
-    <Card className="overflow-hidden p-0">
+    <Card className="overflow-hidden p-0 transition-shadow duration-200 hover:shadow-lg">
       <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
-        <div>
-          <h2 className="text-base font-semibold text-ink">Recent Non-Compliant Inspections</h2>
-          <p className="mt-1 text-sm text-muted">Automated outcomes with returned findings.</p>
+        <div className="max-w-2xl">
+          <h2 className="text-lg font-semibold tracking-[-0.015em] text-ink">Recent Non-Compliant Inspections</h2>
+          <p className="mt-1 text-sm leading-6 text-muted">Automated outcomes with returned findings.</p>
         </div>
-        <Badge tone="danger">{items.length} shown</Badge>
+        <Badge tone="danger" className="mt-1 shrink-0">{items.length} shown</Badge>
       </div>
       {items.length ? (
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border/80">
           {items.map((inspection) => (
-            <button type="button" key={inspection.id} onClick={() => onOpen(inspection.id)} className="group flex w-full flex-col gap-3 px-5 py-4 text-left transition-colors hover:bg-brand-light/50 focus-visible:outline-brand sm:flex-row sm:items-start sm:justify-between sm:px-6">
+            <button type="button" key={inspection.id} onClick={() => onOpen(inspection.id)} className="group relative flex w-full flex-col gap-2.5 px-5 py-4 text-left transition-colors duration-150 hover:bg-surface-soft focus-visible:outline-brand sm:flex-row sm:items-start sm:justify-between sm:gap-6 sm:px-6">
+              <span className="absolute inset-y-0 left-0 w-[3px] bg-brand opacity-0 transition-opacity duration-150 group-hover:opacity-100" aria-hidden />
               <div className="min-w-0">
-                <p className="break-words text-sm font-semibold text-ink">{inspection.product}</p>
-                <p className="mt-1 font-mono text-[11px] text-muted">{inspection.id}</p>
-                <p className="mt-2 break-words text-xs leading-5 text-muted">{inspection.findingSummary}</p>
+                <p className="break-words text-[15px] font-semibold tracking-[-0.008em] text-ink">{inspection.product}</p>
+                <p className="mt-0.5 font-mono text-[11px] tracking-tight text-muted">{inspection.id}</p>
+                <p className="mt-1.5 break-words text-[13px] leading-6 text-muted">{inspection.findingSummary}</p>
               </div>
-              <div className="flex shrink-0 flex-row items-center gap-2 sm:flex-col sm:items-end">
+              <div className="flex shrink-0 flex-row flex-wrap items-center gap-x-3 gap-y-2 sm:flex-col sm:items-end">
                 <SeverityBadge severity={inspection.highestSeverity} />
-                <span className="whitespace-nowrap text-[11px] text-muted">{inspection.findingCount} finding{inspection.findingCount === 1 ? '' : 's'}</span>
-                <span className="whitespace-nowrap text-xs font-medium text-brand group-hover:text-brand-dark">Open result</span>
+                <span className="whitespace-nowrap text-xs tabular-nums text-muted">{inspection.findingCount} finding{inspection.findingCount === 1 ? '' : 's'}</span>
+                <span className="whitespace-nowrap text-[13px] font-semibold text-ink underline decoration-brand/50 decoration-2 underline-offset-4 group-hover:decoration-brand">Open result</span>
               </div>
             </button>
           ))}
         </div>
       ) : (
-        <div className="px-5 py-10 text-center sm:px-6">
+        <div className="px-6 py-12 text-center sm:px-8">
           <p className="font-medium text-ink">No non-compliant inspections returned.</p>
           <p className="mt-1 text-sm text-muted">Automated inspection outcomes will appear here when findings are detected.</p>
         </div>
       )}
-      <div className="border-t border-border px-5 py-4 sm:px-6"><Button size="sm" variant="ghost" onClick={onViewAll}>View history</Button></div>
+      <div className="border-t border-border bg-surface-soft/60 px-5 py-3 sm:px-6"><Button size="sm" variant="ghost" onClick={onViewAll}>View history</Button></div>
     </Card>
   )
 }
 
 function ActivityChart({ data }: { data: DashboardData['activity'] }) {
   const max = Math.max(...data.map((item) => item.inspections), 1)
+  const peak = data.reduce((best, item) => (item.inspections > best ? item.inspections : best), 0)
   return (
-    <Card className="overflow-hidden p-0">
+    <Card className="overflow-hidden p-0 transition-shadow duration-200 hover:shadow-lg">
       <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
-        <div>
-          <h2 className="text-base font-semibold text-ink">Inspection Activity</h2>
-          <p className="mt-1 text-sm text-muted">Completed inspections across the last 7 days.</p>
+        <div className="max-w-2xl">
+          <h2 className="text-lg font-semibold tracking-[-0.015em] text-ink">Inspection Activity</h2>
+          <p className="mt-1 text-sm leading-6 text-muted">Completed inspections across the last 7 days.</p>
         </div>
-        <span className="rounded-md border border-border bg-bg px-2.5 py-1 text-xs font-medium text-muted">Daily</span>
+        <span className="mt-1 shrink-0 rounded-full border border-border bg-surface-soft px-3 py-1 text-xs font-semibold text-muted">Daily</span>
       </div>
       <div className="p-5 sm:p-6">
-        <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3">
-          <div className="flex h-48 flex-col justify-between pb-7 text-right text-[10px] text-muted"><span>{max}</span><span>{Math.round(max / 2)}</span><span>0</span></div>
+        <div className="grid grid-cols-[2rem_minmax(0,1fr)] gap-4">
+          <div className="flex h-40 flex-col justify-between pb-8 text-right text-[11px] tabular-nums text-muted sm:h-48"><span>{max}</span><span>{Math.round(max / 2)}</span><span>0</span></div>
           <div>
-            <div className="relative flex h-48 items-end gap-2 border-b border-l border-border bg-[linear-gradient(to_top,var(--color-border)_1px,transparent_1px)] bg-[length:100%_50%] px-2 sm:gap-3">
+            <div className="relative flex h-40 items-end gap-2 border-b border-border px-2 sm:h-48 sm:gap-4">
               {data.map((item, index) => {
                 const height = `${(item.inspections / max) * 100}%`
+                const isPeak = item.inspections === peak && peak > 0
                 return (
                   <div className="group relative flex h-full flex-1 items-end justify-center" key={item.date}>
-                    <span className="pointer-events-none absolute bottom-[calc(var(--bar-height)+0.55rem)] z-10 hidden whitespace-nowrap rounded-md bg-navy px-2 py-1 text-[11px] text-white shadow-sm group-hover:block group-focus-within:block" style={{ '--bar-height': height } as CSSProperties}>{item.inspections} completed</span>
-                    <div tabIndex={0} className="progress-reveal w-full max-w-8 rounded-t-md bg-brand transition-[background-color,box-shadow] duration-200 group-hover:bg-brand-dark group-hover:shadow-[0_0_0_3px_rgb(37_99_235_/_0.12)] focus-visible:bg-brand-dark" style={{ height, animationDelay: `${index * 45}ms` }} role="img" aria-label={`${item.date}: ${item.inspections} completed inspections`} />
+                    <span className="pointer-events-none absolute bottom-[calc(var(--bar-height)+0.6rem)] z-10 hidden whitespace-nowrap rounded-md bg-ink px-2 py-1 text-[11px] font-medium text-white shadow-sm group-hover:block group-focus-within:block" style={{ '--bar-height': height } as CSSProperties}>{item.inspections} completed</span>
+                    <div tabIndex={0} className={`progress-reveal w-full max-w-9 rounded-t-[6px] transition-[background-color,box-shadow,transform] duration-200 group-hover:-translate-y-0.5 ${isPeak ? 'bg-brand' : 'bg-ink/[0.8] group-hover:bg-brand'}`} style={{ height, animationDelay: `${index * 45}ms` }} role="img" aria-label={`${item.date}: ${item.inspections} completed inspections`} />
                   </div>
                 )
               })}
             </div>
-            <div className="flex gap-2 px-2 pt-2 sm:gap-3">{data.map((item) => <span className="flex-1 whitespace-nowrap text-center text-[10px] text-muted" key={item.date}>{item.date}</span>)}</div>
+            <div className="flex gap-2 px-2 pt-3 sm:gap-4">{data.map((item) => <span className="flex-1 whitespace-nowrap text-center text-[11px] text-muted" key={item.date}>{item.date}</span>)}</div>
           </div>
         </div>
       </div>
@@ -243,43 +269,43 @@ function ActivityChart({ data }: { data: DashboardData['activity'] }) {
 
 function RecentInspections({ data, onOpen }: { data: DashboardInspection[]; onOpen: (id: string) => void }) {
   return (
-    <Card className="overflow-hidden p-0">
+    <Card className="overflow-hidden p-0 transition-shadow duration-200 hover:shadow-lg">
       <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
-          <h2 className="text-base font-semibold text-ink">Recent Inspections</h2>
-          <p className="mt-1 text-sm text-muted">Latest automated outcomes across the workspace.</p>
+          <h2 className="text-lg font-semibold tracking-[-0.015em] text-ink">Recent Inspections</h2>
+          <p className="mt-1 text-sm leading-6 text-muted">Latest automated outcomes across the workspace.</p>
         </div>
-        <span className="text-xs text-muted">{data.length} shown</span>
+        <span className="text-xs tabular-nums text-muted">{data.length} shown</span>
       </div>
       {data.length ? (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] border-collapse text-left">
             <caption className="sr-only">Recent compliance inspections</caption>
-            <thead className="bg-bg text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><tr><th className="px-5 py-3" scope="col">Product</th><th className="px-4 py-3" scope="col">Inspection ID</th><th className="px-4 py-3" scope="col">Completed</th><th className="px-4 py-3" scope="col">Status</th><th className="px-4 py-3" scope="col">Findings</th><th className="px-4 py-3" scope="col">Severity</th><th className="px-5 py-3 text-right" scope="col">Action</th></tr></thead>
-            <tbody className="divide-y divide-border">
+            <thead className="border-b border-border bg-surface-soft/70 text-[11px] font-semibold uppercase tracking-[0.09em] text-muted"><tr><th className="px-5 py-3 font-semibold" scope="col">Product</th><th className="px-4 py-3 font-semibold" scope="col">Inspection ID</th><th className="px-4 py-3 font-semibold" scope="col">Completed</th><th className="px-4 py-3 font-semibold" scope="col">Status</th><th className="px-4 py-3 font-semibold" scope="col">Findings</th><th className="px-4 py-3 font-semibold" scope="col">Severity</th><th className="px-5 py-3 text-right font-semibold" scope="col">Action</th></tr></thead>
+            <tbody className="divide-y divide-border/80">
               {data.map((inspection) => (
-                <tr key={inspection.id} className="group transition-colors hover:bg-brand-light/45">
-                  <td className="px-5 py-4"><p className="font-semibold text-ink">{inspection.product}</p><p className="mt-1 text-xs text-muted">{inspection.productCategory}</p></td>
-                  <td className="px-4 py-4 font-mono text-xs text-muted">{inspection.id}</td>
-                  <td className="px-4 py-4 text-sm text-muted"><time dateTime={inspection.inspectedAt}>{formatInspectionDate(inspection.inspectedAt)}</time></td>
-                  <td className="px-4 py-4"><StatusBadge status={inspection.status} /></td>
-                  <td className="px-4 py-4 text-sm text-ink">{inspection.findingCount} finding{inspection.findingCount === 1 ? '' : 's'}</td>
-                  <td className="px-4 py-4"><SeverityBadge severity={inspection.highestSeverity} /></td>
-                  <td className="px-5 py-4 text-right"><Button size="sm" variant="secondary" onClick={() => onOpen(inspection.id)}>View result</Button></td>
+                <tr key={inspection.id} className="group transition-colors duration-150 hover:bg-surface-soft/80">
+                  <td className="px-5 py-3"><p className="text-sm font-semibold tracking-[-0.006em] text-ink">{inspection.product}</p><p className="mt-0.5 text-xs text-muted">{inspection.productCategory}</p></td>
+                  <td className="px-4 py-3 font-mono text-xs tracking-tight text-muted">{inspection.id}</td>
+                  <td className="px-4 py-3 text-sm tabular-nums text-muted"><time dateTime={inspection.inspectedAt}>{formatInspectionDate(inspection.inspectedAt)}</time></td>
+                  <td className="px-4 py-3"><StatusBadge status={inspection.status} /></td>
+                  <td className="px-4 py-3 text-sm tabular-nums text-ink">{inspection.findingCount} finding{inspection.findingCount === 1 ? '' : 's'}</td>
+                  <td className="px-4 py-3"><SeverityBadge severity={inspection.highestSeverity} /></td>
+                  <td className="px-5 py-3 text-right"><Button size="sm" variant="secondary" onClick={() => onOpen(inspection.id)}>View result</Button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : (
-        <div className="px-5 py-12 text-center"><p className="font-medium text-ink">No inspections yet</p><p className="mt-1 text-sm text-muted">Start an inspection to see its outcome here.</p></div>
+        <div className="px-6 py-14 text-center"><p className="font-medium text-ink">No inspections yet</p><p className="mt-1 text-sm text-muted">Start an inspection to see its outcome here.</p></div>
       )}
     </Card>
   )
 }
 
 function DashboardSkeleton() {
-  return <div className="space-y-6"><LoadingState label="Loading dashboard data" /><Skeleton className="h-32" /><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="h-28" />)}</div><div className="grid gap-6 xl:grid-cols-2"><Skeleton className="h-80" /><Skeleton className="h-80" /></div></div>
+  return <div className="space-y-8"><LoadingState label="Loading dashboard data" /><Skeleton className="h-44 rounded-2xl" /><Skeleton className="h-32 rounded-2xl" /><div className="grid gap-6 xl:grid-cols-[minmax(0,8fr)_minmax(0,5fr)]"><Skeleton className="h-80 rounded-2xl" /><Skeleton className="h-80 rounded-2xl" /></div></div>
 }
 
 export function DashboardPage() {
@@ -291,24 +317,19 @@ export function DashboardPage() {
   }
   useEffect(() => { dashboardService.getDashboard().then((data) => setRequest({ status: 'success', data }), () => setRequest({ status: 'error' })) }, [])
   if (request.status === 'loading') return <DashboardSkeleton />
-  if (request.status === 'error') return <Card className="py-12 text-center"><p className="font-semibold text-ink">Dashboard data could not be loaded</p><p className="mt-1 text-sm text-muted">The inspection portfolio is unavailable right now.</p><Button className="mt-5" variant="secondary" onClick={loadDashboard}>Try again</Button></Card>
+  if (request.status === 'error') return <Card className="py-14 text-center"><p className="text-lg font-semibold tracking-[-0.01em] text-ink">Dashboard data could not be loaded</p><p className="mt-1.5 text-sm leading-6 text-muted">The inspection portfolio is unavailable right now.</p><Button className="mt-6" variant="secondary" onClick={loadDashboard}>Try again</Button></Card>
 
   const { data } = request
   const counts = getOutcomeCounts(data)
-  const violationCount = getViolationCount(data)
-  if (!counts.total) return <div className="space-y-6"><CommandHeader data={data} onNewInspection={openNewInspection} /><Card className="py-16 text-center"><p className="text-lg font-semibold text-ink">No inspections yet</p><p className="mt-1 text-sm text-muted">Create your first inspection to begin.</p><Button className="mt-5" onClick={openNewInspection}><PlusIcon /> New Inspection</Button></Card></div>
+  if (!counts.total) return <div className="space-y-8"><div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-md"><CommandHeader data={data} onNewInspection={openNewInspection} /></div><Card className="py-16 text-center"><p className="text-lg font-semibold text-ink">No inspections yet</p><p className="mt-1 text-sm text-muted">Create your first inspection to begin.</p><Button className="mt-5" onClick={openNewInspection}><PlusIcon /> New Inspection</Button></Card></div>
 
   return (
-    <div className="space-y-6">
-      <CommandHeader data={data} onNewInspection={openNewInspection} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <Metric label="Total Inspections" value={counts.total} context="Completed inspection records" tone="bg-brand" mark="#" />
-        <Metric label="Compliant" value={counts.compliant} context={`${counts.complianceRate}% of inspections`} tone="bg-success" mark="OK" />
-        <Metric label="Non-Compliant" value={counts.nonCompliant} context={`${counts.nonCompliantRate}% with returned violations`} tone="bg-danger" mark="!" />
-        <Metric label="Compliance Rate" value={counts.complianceRate} suffix="%" context="Compliant divided by completed" tone="bg-info" mark="%" />
-        <Metric label="Violations" value={violationCount} context="Returned findings by severity" tone="bg-warning" mark="!" />
-      </div>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)]">
+    <div className="space-y-5 sm:space-y-6">
+      <section aria-label="Inspection command center" className="overflow-hidden rounded-2xl border border-border bg-surface shadow-md">
+        <CommandHeader data={data} onNewInspection={openNewInspection} />
+        <KpiLedger data={data} />
+      </section>
+      <div className="grid items-start gap-5 sm:gap-6 xl:grid-cols-[minmax(0,13fr)_minmax(0,7fr)]">
         <ComplianceOverview data={data} />
         <SeverityInsight counts={data.openFindingsBySeverity} />
       </div>

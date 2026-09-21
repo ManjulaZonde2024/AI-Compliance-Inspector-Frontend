@@ -17,7 +17,7 @@ function titleFromPath(pathname: string) {
   if (pathname.includes('/result')) return 'Result'
   if (pathname.includes('/evidence')) return 'Evidence'
   if (pathname.includes('/report')) return 'Report'
-  return 'AI Compliance Inspector'
+  return 'Packet Decoder'
 }
 
 export function AppShell() {
@@ -30,9 +30,9 @@ export function AppShell() {
   }, [location.pathname])
 
   return (
-    <div className="flex min-h-svh bg-bg">
-      <aside className="hidden w-64 shrink-0 lg:block">
-        <div className="sticky top-0 h-svh">
+    <div className="flex min-h-svh bg-bg text-ink transition-colors duration-200">
+      <aside className="hidden w-[17rem] shrink-0 lg:block">
+        <div className="sticky top-0 h-svh border-r border-navy-line/60">
           <Sidebar />
         </div>
       </aside>
@@ -41,11 +41,11 @@ export function AppShell() {
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-navy/40"
+            className="absolute inset-0 bg-navy/55 backdrop-blur-[2px]"
             aria-label="Close navigation"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative h-full w-64 max-w-[85vw] shadow-md">
+          <div className="relative h-full w-72 max-w-[85vw] overflow-hidden rounded-r-2xl shadow-lg">
             <Sidebar onNavigate={() => setMobileOpen(false)} />
           </div>
         </div>
@@ -57,7 +57,7 @@ export function AppShell() {
           showMenuButton={!isDesktop}
           onMenuClick={() => setMobileOpen(true)}
         />
-        <main className="flex-1 px-5 py-6 sm:px-8 lg:px-10">
+        <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
           <div className="mx-auto w-full max-w-7xl">
             <div key={location.pathname} className="page-enter">
               <Outlet />

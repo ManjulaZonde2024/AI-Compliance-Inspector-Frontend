@@ -55,21 +55,31 @@ export function NewInspectionPage() {
 
   return <>
     <PageHeader title="New inspection" description="Start a packaged-commodity compliance inspection. Enter the product details shown on the packaging and upload clear label images to begin." actions={<Badge tone="info">Inspection intake</Badge>} />
-    <form onSubmit={submit} noValidate className="space-y-8">
+    <form onSubmit={submit} noValidate className="space-y-6">
       {submissionState === 'error' ? <div className="rounded-lg border border-danger/25 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">The inspection could not be created. Please try again.</div> : null}
       {submissionState === 'success' ? <div className="rounded-lg border border-success/25 bg-success/10 px-4 py-3 text-sm text-success" role="status">Inspection created. Opening the scan workspace…</div> : null}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <Card title="Product information" description="Use the details shown on the product packaging. Fields marked * are required." className="h-fit">
           <div className="space-y-5">
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted">Primary details</p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <div><Input label="Product name *" placeholder="e.g. Calm Restore Night Cream" value={form.productName} error={errors.productName} onChange={(event) => { setForm({ ...form, productName: event.target.value }); setErrors({ ...errors, productName: undefined }) }} /></div>
               <div className="flex flex-col gap-1.5"><label htmlFor="category" className="text-sm font-medium text-ink">Category *</label><select id="category" value={form.category} aria-invalid={errors.category ? true : undefined} aria-describedby={errors.category ? 'category-error' : 'category-help'} onChange={(event) => { setForm({ ...form, category: event.target.value as ProductCategory }); setErrors({ ...errors, category: undefined }) }} className={`h-10 rounded-md border bg-surface px-3 text-sm text-ink transition-colors hover:border-navy-line/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${errors.category ? 'border-danger' : 'border-border'}`}><option value="">Select a category</option>{productCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select><p id="category-help" className="text-xs text-muted">Choose the closest product category for this intake.</p>{errors.category ? <p id="category-error" className="text-sm text-danger">{errors.category}</p> : null}</div>
+              </div>
             </div>
-            <div className="grid items-end gap-5 sm:grid-cols-2"><Input label="Brand or manufacturer" placeholder="Optional" value={form.brand} onChange={(event) => setForm({ ...form, brand: event.target.value })} /><Input label="Product identifier / SKU" placeholder="Optional" value={form.sku} onChange={(event) => setForm({ ...form, sku: event.target.value })} /></div>
-            <div className="flex flex-col gap-1.5"><label htmlFor="notes" className="text-sm font-medium text-ink">Notes or description <span className="font-normal text-muted">(optional)</span></label><textarea id="notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder="Add useful context for the reviewer, such as a product variant or packaging detail." rows={5} className="w-full resize-y rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-muted transition-colors hover:border-navy-line/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" /><p className="text-xs text-muted">Do not include sensitive customer or account information.</p></div>
+            <div className="border-t border-border/70 pt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted">Identification</p>
+              <div className="mt-3 grid items-end gap-4 sm:grid-cols-2"><Input label="Brand or manufacturer" placeholder="Optional" value={form.brand} onChange={(event) => setForm({ ...form, brand: event.target.value })} /><Input label="Product identifier / SKU" placeholder="Optional" value={form.sku} onChange={(event) => setForm({ ...form, sku: event.target.value })} />
+              </div>
+            </div>
+            <div className="border-t border-border/70 pt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.13em] text-muted">Context</p>
+              <div className="mt-3 flex flex-col gap-1.5"><label htmlFor="notes" className="text-sm font-medium text-ink">Notes or description <span className="font-normal text-muted">(optional)</span></label><textarea id="notes" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder="Add useful context for the reviewer, such as a product variant or packaging detail." rows={5} className="w-full resize-y rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-muted transition-colors hover:border-navy-line/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" /><p className="text-xs text-muted">Do not include sensitive customer or account information.</p></div>
+              </div>
           </div>
         </Card>
-        <Card title="Product images" description="Add clear package and label images. You can set a view label and review order after uploading.">
+        <Card title="Product images" description="Add clear package and label images. You can set a view label and review order after uploading." className="h-fit border-brand/25">
           <ImageManager images={form.images} error={errors.images} onChange={(images) => { setForm({ ...form, images }); if (images.length) setErrors({ ...errors, images: undefined }) }} />
           <p className="mt-4 flex items-start gap-2 text-xs text-muted">Capture guidance: keep the label fully in frame, avoid glare and heavy shadows, and use the highest resolution available.</p>
         </Card>
@@ -82,7 +92,7 @@ export function NewInspectionPage() {
           </div>
         </Card>
       </div>
-      <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"><p className="text-sm text-muted">Confirm the product details and label images before starting.</p><Button type="submit" disabled={submissionState === 'submitting' || submissionState === 'success'}>{submissionState === 'submitting' ? 'Starting inspection…' : submissionState === 'success' ? 'Opening scan…' : 'Start inspection'} <span aria-hidden>→</span></Button></div>
+      <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"><p className="text-sm text-muted">Confirm the product details and label images before starting.</p><Button type="submit" disabled={submissionState === 'submitting' || submissionState === 'success'}>{submissionState === 'submitting' ? 'Starting inspection…' : submissionState === 'success' ? 'Opening scan…' : 'Start inspection'} <span aria-hidden>→</span></Button></div>
     </form>
   </>
 }
