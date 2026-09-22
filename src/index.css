@@ -4,24 +4,28 @@
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system,
     'Segoe UI', sans-serif;
 
-  /* Plum x Charcoal light theme — neutral surfaces, plum brand accent */
-  --color-bg: #f7f5f8;
+  /* Plum x Charcoal light theme — neutral surfaces, plum brand accent.
+     Palette: primary plum #743B67 · mauve #B86B9F · lavender #C9B7E8 ·
+     soft lilac #E9DDF2 · light background #F8F6FA · white surfaces. */
+  --color-bg: #f8f6fa;
   --color-surface: #ffffff;
-  --color-surface-soft: #fcfafc;
+  --color-surface-soft: #f6f3f9;
   --color-ink: #1d1a20;
   --color-muted: #6f6872;
-  --color-border: #e5dfe6;
+  --color-border: #e6e0e9;
   --color-border-strong: #cfc4d1;
 
-  --color-brand: #7a3e68;
-  --color-brand-dark: #663254;
-  --color-brand-light: #f3e8f0;
-  --color-accent: #b56b98;
-  --color-accent-light: #f7edf3;
+  --color-brand: #743b67;
+  --color-brand-dark: #5d304f;
+  --color-brand-light: #e9ddf2;
+  --color-accent: #b86b9f;
+  --color-accent-light: #f6ebf2;
+  --color-lavender: #c9b7e8;
+  --color-rose: #d9a8c5;
 
-  --color-success: #1e7a46;
-  --color-warning: #b45309;
-  --color-danger: #c0352b;
+  --color-success: #278a68;
+  --color-warning: #c28a32;
+  --color-danger: #c84a45;
   --color-info: #6f6872;
 
   --color-navy: #211b24;
@@ -40,21 +44,24 @@
     0 1px 2px rgb(29 26 32 / 0.06), 0 12px 32px -12px rgb(60 45 60 / 0.2);
 }
 
-/* Plum x Charcoal dark theme — layered charcoal, restrained plum accents. */
+/* Plum x Charcoal dark theme — layered charcoal (#100D12 / #19151C / #242027),
+   restrained plum + lavender accents. */
 [data-theme='dark'] {
   --color-bg: #100d12;
-  --color-surface: #18141b;
-  --color-surface-soft: #211b24;
+  --color-surface: #19151c;
+  --color-surface-soft: #242027;
   --color-ink: #f5eff4;
   --color-muted: #aaa1ac;
-  --color-border: #302832;
+  --color-border: #322a36;
   --color-border-strong: #453a49;
 
-  --color-brand: #c06a9f;
-  --color-brand-dark: #d17bae;
+  --color-brand: #b86b9f;
+  --color-brand-dark: #c993b4;
   --color-brand-light: #2b1d29;
-  --color-accent: #8f527a;
+  --color-accent: #c9b7e8;
   --color-accent-light: #2b1d29;
+  --color-lavender: #c9b7e8;
+  --color-rose: #d9a8c5;
 
   --color-success: #3cb179;
   --color-warning: #e8a23d;
@@ -108,7 +115,7 @@
   }
 
   [data-theme='dark'] ::selection {
-    background: rgb(192 106 159 / 0.45);
+    background: rgb(184 107 159 / 0.45);
     color: #fff;
   }
 
@@ -307,6 +314,256 @@
   .welcome-step {
     animation: welcome-step 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
+  /* Top-nav route list scrolls horizontally on small screens without a bar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Horizontal do / don't guidance carousel — one slide wide, subtle slide. */
+  .carousel-track {
+    display: flex;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-property: transform;
+    will-change: transform;
+  }
+  /* Subtle plum surface gradient — token driven, so it works in light and
+     dark without introducing a second color system. */
+  .plum-panel {
+    background-image:
+      radial-gradient(
+        130% 120% at 0% 0%,
+        color-mix(in srgb, var(--color-brand) 14%, transparent),
+        transparent 60%
+      ),
+      linear-gradient(180deg, var(--color-surface), var(--color-surface-soft));
+  }
+  /* Small plum gradient accent above KPI labels and key numbers. */
+  .plum-accent {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-brand),
+      var(--color-accent)
+    );
+  }
+  /* Gentle hover elevation for premium surfaces. */
+  .hover-lift {
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      border-color 180ms ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  /* ---- Gradient accents: uiGradients-inspired, kept in the plum family ---- */
+
+  /* Primary CTA gradient (plum → mauve); drifts gently on hover.
+     End stops are mixed toward brand (and deepened in dark) so white
+     button text keeps sufficient contrast in both themes. */
+  .cta-grad {
+    background-image: linear-gradient(
+      135deg,
+      var(--color-brand) 0%,
+      color-mix(in srgb, var(--color-brand) 70%, var(--color-accent)) 100%
+    );
+    background-size: 160% 160%;
+    background-position: 0% 50%;
+    transition: background-position 400ms ease;
+  }
+  .cta-grad:hover {
+    background-position: 100% 50%;
+  }
+  [data-theme='dark'] .cta-grad {
+    background-image: linear-gradient(135deg, #743b67 0%, #a05487 100%);
+  }
+
+  /* Slow gradient movement for thin accent bars. */
+  .grad-drift {
+    background-size: 200% 100%;
+    animation: grad-drift 10s ease-in-out infinite;
+  }
+
+  /* Reverse-direction accent hairline (pairs with .plum-accent). */
+  .plum-accent-rev {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-brand)
+    );
+  }
+  /* Gradient system — primary: plum → mauve (.plum-accent / .cta-grad),
+     secondary: plum → lavender, soft: mauve → rose. */
+  .grad-lavender {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-brand),
+      var(--color-lavender)
+    );
+  }
+  .grad-soft {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-accent),
+      var(--color-rose)
+    );
+  }
+
+  /* Soft radial glow for hero surfaces — always sits behind content. */
+  .glow-orb {
+    position: absolute;
+    border-radius: 9999px;
+    background: radial-gradient(
+      circle at 40% 40%,
+      color-mix(in srgb, var(--color-accent) 55%, transparent),
+      transparent 70%
+    );
+    filter: blur(30px);
+    opacity: 0.45;
+    animation: orb-drift 16s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  [data-theme='dark'] .glow-orb {
+    opacity: 0.3;
+  }
+
+  /* Gradient progress fills — token driven, so light/dark stay harmonious. */
+  .grad-ok {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-success),
+      color-mix(in srgb, var(--color-success) 65%, var(--color-accent))
+    );
+  }
+  .grad-bad {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-danger),
+      color-mix(in srgb, var(--color-danger) 60%, var(--color-brand))
+    );
+  }
+  .grad-warn {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-warning),
+      color-mix(in srgb, var(--color-warning) 55%, var(--color-accent))
+    );
+  }
+  .grad-info {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-info),
+      color-mix(in srgb, var(--color-info) 55%, var(--color-brand))
+    );
+  }
+
+  /* Vertical plum column for highlighted chart bars. */
+  .grad-column {
+    background-image: linear-gradient(
+      180deg,
+      var(--color-accent),
+      var(--color-brand)
+    );
+  }
+  /* Expanding a collapsible section (New Inspection secondary details). */
+  .details-body {
+    animation: details-open 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes details-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes grad-drift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes orb-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(24px, 14px, 0) scale(1.06);
+  }
+}
+
+/* Compact settings feedback — fade + slight slide, no bouncing. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-in {
+  animation: toast-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Ambient background depth — slow plum/lavender radial glow, decorative only.
+   Content stays the visual priority; reduced motion settles it instantly. */
+@keyframes ambient-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-3%, 2%, 0) scale(1.05);
+  }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      42rem 30rem at 88% -6rem,
+      rgb(184 107 159 / 0.1),
+      transparent 62%
+    ),
+    radial-gradient(
+      36rem 26rem at -8rem 68vh,
+      rgb(201 183 232 / 0.12),
+      transparent 65%
+    );
+  animation: ambient-drift 42s ease-in-out infinite alternate;
+}
+
+[data-theme='dark'] body::before {
+  background:
+    radial-gradient(
+      44rem 32rem at 88% -8rem,
+      rgb(184 107 159 / 0.13),
+      transparent 62%
+    ),
+    radial-gradient(
+      34rem 26rem at -6rem 70vh,
+      rgb(116 59 103 / 0.16),
+      transparent 66%
+    );
 }
 
 /*

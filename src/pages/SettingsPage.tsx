@@ -30,7 +30,8 @@ export function SettingsPage() {
   const [settings, setSettings] = useState<RagSettings | null>(null)
   const [failed, setFailed] = useState(false)
   const [syncing, setSyncing] = useState(false)
-  const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null)
+  /** Compact inline confirmation shown after a sync check; auto-dismisses. */
+  const [message, setMessage] = useState<{ title: string; body: string } | null>(null)
   const timer = useRef<number | null>(null)
 
   useEffect(() => {
@@ -53,13 +54,19 @@ export function SettingsPage() {
 
     // Minimal frontend-only mock interaction until the RAG backend is
     // connected: loading state, existing mock data retained, then a
-    // success state. No network requests.
+    // result state derived from the existing settings summary. No network
+    // requests; the confirmation fades in and auto-dismisses.
     timer.current = window.setTimeout(() => {
       setSyncing(false)
-      setMessage({
-        tone: 'success',
-        text: 'Synchronization completed successfully. The knowledge base reflects the most recent official source refresh.',
-      })
+      const summaryItems = latestSyncSummary(settings?.indexedSources ?? 0)
+      const updated = summaryItems.find((item) => item.label === 'Rules updated')
+      const updates = Number(updated?.value ?? '0')
+      setMessage(
+        updates > 0
+          ? { title: 'Rules updated', body: `${updates} rule update${updates === 1 ? '' : 's'} ${updates === 1 ? 'is' : 'are'} now available.` }
+          : { title: 'Rules are up to date', body: 'No new rule updates were found.' },
+      )
+      timer.current = window.setTimeout(() => setMessage(null), 4500)
     }, 1200)
   }
 
@@ -91,36 +98,23 @@ export function SettingsPage() {
   const summary = latestSyncSummary(settings.indexedSources)
 
   return (
-    <div>
+    <div className="welcome-enter">
       <PageHeader
         title="Settings"
         description="Knowledge base synchronization and status."
       />
 
-      <p className="mb-5 max-w-3xl text-sm leading-6 text-muted">
+      <p className="mb-4 max-w-3xl text-sm leading-6 text-muted">
         Official Legal Metrology references are synchronized by the connected service, and inspections evaluate against the resulting knowledge base.
       </p>
 
-      {message ? (
-        <div
-          className={`mb-5 rounded-md border px-4 py-3 text-sm ${
-            message.tone === 'success'
-              ? 'border-success/25 bg-success/10 text-success'
-              : 'border-danger/25 bg-danger/5 text-danger'
-          }`}
-          role={message.tone === 'success' ? 'status' : 'alert'}
-        >
-          {message.text}
-        </div>
-      ) : null}
-
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] [animation-delay:60ms] welcome-enter">
         <Card
           title="Knowledge base status"
           description="Frontend representation of the returned RAG knowledge source state."
         >
           <div
-            className={`relative mt-5 overflow-hidden rounded-md border p-4 ${kbSynced ? 'border-success/25 bg-success/5' : 'border-warning/25 bg-warning/5'}`}
+            className={`hover-lift relative mt-4 overflow-hidden rounded-md border p-4 transition-[border-color,box-shadow,transform] duration-200 ${kbSynced ? 'border-success/25 bg-success/5' : 'border-warning/25 bg-warning/5'}`}
           >
             <span
               className={`absolute inset-y-0 left-0 w-1 ${kbSynced ? 'bg-success' : 'bg-warning'}`}
@@ -143,42 +137,43 @@ export function SettingsPage() {
             </div>
           </div>
 
-          <dl className="mt-4 divide-y divide-border text-sm">
-            <div className="flex items-center justify-between gap-4 py-3">
+          <dl className="mt-3 divide-y divide-border text-sm">
+            <div className="flex items-center justify-between gap-4 py-2.5">
               <dt className="text-muted">Last synchronization</dt>
-              <dd className="font-medium text-ink">{formatDate(settings.lastRun)}</dd>
+              <dd className="font-medium tabular-nums text-ink">{formatDate(settings.lastRun)}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4 py-3">
+            <div className="flex items-center justify-between gap-4 py-2.5">
               <dt className="text-muted">Indexed sources</dt>
               <dd className="font-medium text-ink">
                 {settings.indexedSources} official sources
               </dd>
             </div>
-            <div className="flex items-center justify-between gap-4 py-3">
+            <div className="flex items-center justify-between gap-4 py-2.5">
               <dt className="text-muted">Scope</dt>
               <dd className="font-medium text-ink">Legal Metrology references</dd>
             </div>
-            <div className="flex items-center justify-between gap-4 py-3">
+            <div className="flex items-center justify-between gap-4 py-2.5">
               <dt className="text-muted">Automatic refresh</dt>
               <dd className="font-medium text-ink">Once every week</dd>
             </div>
           </dl>
         </Card>
 
-        <div className="flex min-w-0 flex-col gap-5">
+        <div className="flex min-w-0 flex-col gap-4">
           <Card
             title="Latest synchronization"
             description="Summary of changes from the most recent knowledge base refresh."
           >
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {summary.map((item) => (
-                <div key={item.label} className="rounded-md border border-border bg-bg p-3">
-                  <p className="text-2xl font-semibold text-ink">{item.value}</p>
+                <div key={item.label} className="hover-lift rounded-md border border-border bg-bg p-3 transition-[border-color,box-shadow,transform] duration-200 hover:border-brand/30">
+                  <span className="plum-accent mb-2 block h-1 w-6 rounded-full opacity-80" aria-hidden />
+                  <p className="text-2xl font-semibold tabular-nums text-ink">{item.value}</p>
                   <p className="mt-1 text-xs text-muted">{item.label}</p>
                 </div>
               ))}
             </div>
-            <p className="mt-4 text-sm leading-6 text-muted">
+            <p className="mt-3 text-sm leading-6 text-muted">
               Latest synchronization completed successfully. The knowledge base
               reflects the most recent official source refresh.
             </p>
@@ -188,39 +183,50 @@ export function SettingsPage() {
             title="Manual synchronization"
             description="Refresh the Legal Metrology knowledge base using the latest available official sources."
           >
-            <div className="mt-5 rounded-md border border-border bg-bg p-4">
+            <div className="mt-4 rounded-md border border-border bg-bg p-3">
               <p className="font-medium text-ink">Automatic synchronization</p>
               <p className="mt-1 text-sm text-muted">
                 The knowledge base is refreshed automatically once every week.
               </p>
             </div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted">
                 {syncing ? 'Checking for updates…' : 'Check for rule updates'}
               </p>
-              <Button onClick={runSynchronization} disabled={syncing}>
+              <Button className="cta-grad" onClick={runSynchronization} disabled={syncing}>
                 {syncing ? 'Checking for updates…' : 'Check for rule updates'}
               </Button>
             </div>
+            {message ? (
+              <div className="toast-in mt-3 flex items-start gap-2.5 rounded-lg border border-success/25 bg-surface px-3 py-2.5 shadow-md" role="status">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success text-white" aria-hidden>
+                  <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="m2.5 6.3 2.3 2.3 4.7-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold text-ink">{message.title}</p>
+                  <p className="text-[13px] leading-5 text-muted">{message.body}</p>
+                </div>
+              </div>
+            ) : null}
           </Card>
         </div>
       </div>
 
       <Card
-        className="mt-5"
+        className="mt-4 welcome-enter [animation-delay:120ms]"
         title="Legal Metrology sources"
         description="The connected knowledge workflow is intended to use official references. This interface does not scrape or update sources."
       >
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-md border border-border bg-bg p-4">
+          <div className="hover-lift rounded-md border border-border bg-bg p-3.5 transition-[border-color,box-shadow,transform] duration-200 hover:border-brand/30">
             <p className="font-medium text-ink">Official references</p>
             <p className="mt-1 text-sm text-muted">Packaged commodity guidance</p>
           </div>
-          <div className="rounded-md border border-border bg-bg p-4">
+          <div className="hover-lift rounded-md border border-border bg-bg p-3.5 transition-[border-color,box-shadow,transform] duration-200 hover:border-brand/30">
             <p className="font-medium text-ink">Source status</p>
             <p className="mt-1 text-sm text-success">Available for review</p>
           </div>
-          <div className="rounded-md border border-border bg-bg p-4">
+          <div className="hover-lift rounded-md border border-border bg-bg p-3.5 transition-[border-color,box-shadow,transform] duration-200 hover:border-brand/30">
             <p className="font-medium text-ink">Synchronization managed by</p>
             <p className="mt-1 text-sm font-medium text-ink">Connected service</p>
           </div>

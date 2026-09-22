@@ -15,7 +15,7 @@ export function ScanProgress({ stages }: ScanProgressProps) {
 
   return <section aria-labelledby="scan-progress-heading">
     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><h2 id="scan-progress-heading" className="font-semibold tracking-tight text-ink">Analysis workflow</h2><p className="mt-1 text-sm text-muted">{active ? `${active.label} is in progress.` : `${completed} of ${stages.length} workflow stages complete.`}</p></div><p className="text-sm font-medium text-muted">{completed} of {stages.length} complete</p></div>
-    <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-border" role="progressbar" aria-label="Inspection analysis progress" aria-valuemin={0} aria-valuemax={stages.length} aria-valuenow={completed}><div className="h-full rounded-full bg-brand transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${(completed / stages.length) * 100}%` }} /></div>
+    <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-border" role="progressbar" aria-label="Inspection analysis progress" aria-valuemin={0} aria-valuemax={stages.length} aria-valuenow={completed}><div className="h-full rounded-full bg-gradient-to-r from-brand to-accent transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${(completed / stages.length) * 100}%` }} /></div>
     <ol className="mt-5 space-y-3">
       {stages.map((stage) => {
         const presentation = statePresentation[stage.state]
